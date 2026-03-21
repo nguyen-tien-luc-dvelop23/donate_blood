@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'sos_success_dialog.dart';
 
 class SOSFormPage extends StatefulWidget {
   const SOSFormPage({super.key});
@@ -83,7 +84,13 @@ class _SOSFormPageState extends State<SOSFormPage> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const SOSSuccessDialog(),
+                    );
+                  },
                   icon: const Icon(Icons.volume_up, color: Colors.white),
                   label: const Text(
                     "Đăng SOS Khẩn cấp",
