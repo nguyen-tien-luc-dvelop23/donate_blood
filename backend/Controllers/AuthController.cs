@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using GiveNowBackend.Data;
 using GiveNowBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
