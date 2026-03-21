@@ -50,7 +50,7 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid phone number or password");
 
         var token = GenerateJwtToken(user);
-        return Ok(new { Token = token, User = new { user.Id, user.PhoneNumber, user.FullName, user.BloodType } });
+        return Ok(new { Token = token, User = new { user.Id, user.PhoneNumber, user.FullName, user.BloodType, user.BloodVolume, user.DonationCount } });
     }
 
     [HttpPost("send-otp")]

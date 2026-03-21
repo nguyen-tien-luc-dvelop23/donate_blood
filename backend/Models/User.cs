@@ -22,5 +22,9 @@ public class User
 
     public string MedicalInfo { get; set; } = string.Empty;
 
+    public double BloodVolume { get; set; } = 0.0;
+
+    public int DonationCount { get; set; } = 0;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

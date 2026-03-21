@@ -100,6 +100,8 @@ using (var scope = app.Services.CreateScope())
             `FullName` varchar(100) NOT NULL DEFAULT '',
             `BloodType` varchar(10) NOT NULL,
             `MedicalInfo` longtext NOT NULL,
+            `BloodVolume` double NOT NULL DEFAULT 0.0,
+            `DonationCount` int NOT NULL DEFAULT 0,
             `CreatedAt` datetime(6) NOT NULL,
             PRIMARY KEY (`Id`),
             UNIQUE KEY `IX_Users_PhoneNumber` (`PhoneNumber`)

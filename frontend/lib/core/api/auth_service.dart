@@ -18,13 +18,17 @@ class AuthService {
         final phone = data['user']['phoneNumber'];
         final fullName = data['user']['fullName'] ?? '';
         final bloodType = data['user']['bloodType'] ?? '';
+        final double bloodVolume = (data['user']['bloodVolume'] ?? 0).toDouble();
+        final int donationCount = data['user']['donationCount'] ?? 0;
         
-        // Save token, phone, name, bloodType
+        // Save token, phone, name, bloodType, stats
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await prefs.setString('phone', phone);
         await prefs.setString('fullName', fullName);
         await prefs.setString('bloodType', bloodType);
+        await prefs.setDouble('bloodVolume', bloodVolume);
+        await prefs.setInt('donationCount', donationCount);
         
         return data;
       }
@@ -56,6 +60,8 @@ class AuthService {
     await prefs.remove('phone');
     await prefs.remove('fullName');
     await prefs.remove('bloodType');
+    await prefs.remove('bloodVolume');
+    await prefs.remove('donationCount');
   }
 
   Future<String?> getLoggedPhone() async {
@@ -71,5 +77,15 @@ class AuthService {
   Future<String?> getLoggedBloodType() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('bloodType');
+  }
+
+  Future<double> getLoggedBloodVolume() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble('bloodVolume') ?? 0.0;
+  }
+
+  Future<int> getLoggedDonationCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('donationCount') ?? 0;
   }
 }
