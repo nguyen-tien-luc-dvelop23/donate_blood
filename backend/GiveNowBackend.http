@@ -1,0 +1,6 @@
+@GiveNowBackend_HostAddress = http://localhost:5241
+
+GET {{GiveNowBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

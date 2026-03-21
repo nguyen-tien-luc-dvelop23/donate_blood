@@ -1,0 +1,25 @@
+﻿  Determining projects to restore...
+D:\flutter_blood\backend\GiveNowBackend.csproj : warning NU1608: Detected package version outside of dependency constraint: Pomelo.EntityFrameworkCore.MySql 9.0.0 requires Microsoft.EntityFrameworkCore.Relational (>= 9.0.0 && <= 9.0.999) but version Microsoft.EntityFrameworkCore.Relational 10.0.5 was resolved.
+  All projects are up-to-date for restore.
+D:\flutter_blood\backend\GiveNowBackend.csproj : warning NU1608: Detected package version outside of dependency constraint: Pomelo.EntityFrameworkCore.MySql 9.0.0 requires Microsoft.EntityFrameworkCore.Relational (>= 9.0.0 && <= 9.0.999) but version Microsoft.EntityFrameworkCore.Relational 10.0.5 was resolved.
+D:\flutter_blood\backend\Controllers\AuthController.cs(34,28): error CS0103: The name 'BCrypt' does not exist in the current context [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Controllers\AuthController.cs(48,30): error CS0103: The name 'BCrypt' does not exist in the current context [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Controllers\AuthController.cs(51,38): warning CS8604: Possible null reference argument for parameter 'user' in 'string AuthController.GenerateJwtToken(User user)'. [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Program.cs(12,18): error CS1061: 'IServiceCollection' does not contain a definition for 'AddSwaggerGen' and no accessible extension method 'AddSwaggerGen' accepting a first argument of type 'IServiceCollection' could be found (are you missing a using directive or an assembly reference?) [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Program.cs(45,9): error CS1061: 'WebApplication' does not contain a definition for 'UseSwagger' and no accessible extension method 'UseSwagger' accepting a first argument of type 'WebApplication' could be found (are you missing a using directive or an assembly reference?) [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Program.cs(46,9): error CS1061: 'WebApplication' does not contain a definition for 'UseSwaggerUI' and no accessible extension method 'UseSwaggerUI' accepting a first argument of type 'WebApplication' could be found (are you missing a using directive or an assembly reference?) [D:\flutter_blood\backend\GiveNowBackend.csproj]
+
+Build FAILED.
+
+D:\flutter_blood\backend\GiveNowBackend.csproj : warning NU1608: Detected package version outside of dependency constraint: Pomelo.EntityFrameworkCore.MySql 9.0.0 requires Microsoft.EntityFrameworkCore.Relational (>= 9.0.0 && <= 9.0.999) but version Microsoft.EntityFrameworkCore.Relational 10.0.5 was resolved.
+D:\flutter_blood\backend\GiveNowBackend.csproj : warning NU1608: Detected package version outside of dependency constraint: Pomelo.EntityFrameworkCore.MySql 9.0.0 requires Microsoft.EntityFrameworkCore.Relational (>= 9.0.0 && <= 9.0.999) but version Microsoft.EntityFrameworkCore.Relational 10.0.5 was resolved.
+D:\flutter_blood\backend\Controllers\AuthController.cs(51,38): warning CS8604: Possible null reference argument for parameter 'user' in 'string AuthController.GenerateJwtToken(User user)'. [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Controllers\AuthController.cs(34,28): error CS0103: The name 'BCrypt' does not exist in the current context [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Controllers\AuthController.cs(48,30): error CS0103: The name 'BCrypt' does not exist in the current context [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Program.cs(12,18): error CS1061: 'IServiceCollection' does not contain a definition for 'AddSwaggerGen' and no accessible extension method 'AddSwaggerGen' accepting a first argument of type 'IServiceCollection' could be found (are you missing a using directive or an assembly reference?) [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Program.cs(45,9): error CS1061: 'WebApplication' does not contain a definition for 'UseSwagger' and no accessible extension method 'UseSwagger' accepting a first argument of type 'WebApplication' could be found (are you missing a using directive or an assembly reference?) [D:\flutter_blood\backend\GiveNowBackend.csproj]
+D:\flutter_blood\backend\Program.cs(46,9): error CS1061: 'WebApplication' does not contain a definition for 'UseSwaggerUI' and no accessible extension method 'UseSwaggerUI' accepting a first argument of type 'WebApplication' could be found (are you missing a using directive or an assembly reference?) [D:\flutter_blood\backend\GiveNowBackend.csproj]
+    3 Warning(s)
+    5 Error(s)
+
+Time Elapsed 00:00:02.32

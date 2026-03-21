@@ -1,0 +1,43 @@
+# .gitignore for d:\flutter_blood (Flutter + ASP.NET Core)
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.DS_Store
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+frontend/build/
+frontend/.dart_tool/
+frontend/.packages
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+
+# ASP.NET Core
+backend/bin/
+backend/obj/
+**/bin/
+**/obj/
+backend/appsettings.Development.json
+backend/Properties/launchSettings.json
+
+# Local Environment
+.env
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Mobile Specific
+**/android/app/key.properties
+**/android/app/src/main/res/values/strings.xml
+**/ios/Runner/GeneratedPluginRegistrant.h
+**/ios/Runner/GeneratedPluginRegistrant.m
