@@ -73,6 +73,11 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    // Ensure database is created and migrations are applied
+    context.Database.Migrate();
+
+    // Seed admin if not exists
     if (!context.Users.Any(u => u.PhoneNumber == "admin"))
     {
         context.Users.Add(new User
