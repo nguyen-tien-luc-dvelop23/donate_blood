@@ -88,10 +88,13 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     
-    // Drop old table if schema is wrong, then recreate
-    context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `Users`;");
-    
-    // Create Users table explicitly using raw SQL
+    // Drop existing tables to ensure a clean schema creation (Dev mode only)
+    try {
+        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `DonationRecords`;");
+        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `SosRequests`;");
+        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `Users`;");
+    } catch { }
+
     context.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS `Users` (
             `Id` char(36) NOT NULL,
@@ -124,9 +127,7 @@ using (var scope = app.Services.CreateScope())
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
 
-    // Attempt to alter Users table if adding new columns
-    try { context.Database.ExecuteSqlRaw("ALTER TABLE `Users` ADD COLUMN `AvatarUrl` varchar(500) NOT NULL DEFAULT '';"); } catch { }
-    try { context.Database.ExecuteSqlRaw("ALTER TABLE `Users` DROP COLUMN `DonationCount`;"); } catch { }
+    // Removed unsafe ALTER TABLE statements here to prevent Pomelo MySQL native driver segfaults (Exit Code 139) on Linux
 
     // Create DonationRecords table explicitly
     context.Database.ExecuteSqlRaw(@"
