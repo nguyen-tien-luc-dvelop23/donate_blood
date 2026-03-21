@@ -25,7 +25,21 @@ builder.Services.AddCors(options =>
 });
 
 // Configure MySQL Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+string connectionString;
+
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    // Convert mysql:// URI to ADO.NET connection string
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Uid={userInfo[0]};Pwd={userInfo[1]};";
+}
+else
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35))));
 
