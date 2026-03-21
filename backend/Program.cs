@@ -2,6 +2,7 @@ using System.Text;
 using GiveNowBackend.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using GiveNowBackend.Models;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,5 +54,21 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed Admin User
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    if (!context.Users.Any(u => u.PhoneNumber == "admin"))
+    {
+        context.Users.Add(new User
+        {
+            PhoneNumber = "admin",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+            BloodType = "Admin"
+        });
+        context.SaveChanges();
+    }
+}
 
 app.Run();

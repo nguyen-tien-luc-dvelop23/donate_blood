@@ -13,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController(text: 'Nhập tài khoản hoặc số điện thoại');
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.phone,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: '09698888',
+                  hintText: 'Nhập tài khoản hoặc số điện thoại',
                   hintStyle: const TextStyle(color: AppColors.textMuted),
                   suffixIcon: Icon(Icons.phone_outlined, color: AppColors.textMuted),
                 ),

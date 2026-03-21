@@ -12,8 +12,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _phoneController = TextEditingController(text: 'Nhập tài khoản hoặc số điện thoại');
-  final _dateController = TextEditingController(text: 'Nhập ngày hiến máu gần nhất (nếu có)');
+  final _phoneController = TextEditingController();
+  final _dateController = TextEditingController();
   String _selectedBloodType = 'A+';
   final List<String> _bloodTypes = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
   final _passwordController = TextEditingController();
@@ -160,7 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               keyboardType: TextInputType.phone,
               style: const TextStyle(color: AppColors.textPrimary),
               decoration: InputDecoration(
-                hintText: '09698888',
+                hintText: 'Nhập số điện thoại',
                 suffixIcon: Icon(Icons.phone_outlined, color: AppColors.textMuted),
               ),
             ),
@@ -232,7 +232,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onTap: _selectDate,
               style: const TextStyle(color: AppColors.textPrimary),
               decoration: InputDecoration(
-                hintText: 'mm/dd/yyyy',
+                hintText: 'Nhập ngày hiến máu gần nhất (nếu có)',
                 suffixIcon: IconButton(
                   icon: Icon(Icons.calendar_today, color: AppColors.textMuted),
                   onPressed: _selectDate,
