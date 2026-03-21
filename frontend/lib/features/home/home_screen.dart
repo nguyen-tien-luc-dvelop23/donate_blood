@@ -4,6 +4,7 @@ import '../sos/sos_page.dart';
 import '../sos/sos_form_page.dart';
 import '../map/blood_map_page.dart';
 import '../profile/profile_page.dart';
+import '../../core/api/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -100,6 +101,24 @@ class _HomePage extends StatefulWidget {
 
 class _HomePageState extends State<_HomePage> {
   bool _isReadyToDonate = true;
+  String? _fullName;
+  String? _phone;
+  final _authService = AuthService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final name = await _authService.getLoggedName();
+    final phone = await _authService.getLoggedPhone();
+    setState(() {
+      _fullName = name;
+      _phone = phone;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,9 +155,9 @@ class _HomePageState extends State<_HomePage> {
                             'Xin chào',
                             style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
                           ),
-                          const Text(
-                            'Nguyễn Tiến Lực',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          Text(
+                            _fullName != null && _fullName!.isNotEmpty ? _fullName! : (_phone ?? 'Người dùng'),
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 2),
                           Row(
