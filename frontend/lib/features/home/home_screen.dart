@@ -6,6 +6,7 @@ import '../map/blood_map_page.dart';
 import '../profile/profile_page.dart';
 import '../../core/api/auth_service.dart';
 import '../history/history_page.dart';
+import '../honor/honor_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -339,7 +340,9 @@ class _HomePageState extends State<_HomePage> {
                       child: _buildBigSquareCard(
                         icon: Icons.emoji_events,
                         label: 'Vinh danh',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const HonorScreen()));
+                        },
                       ),
                     ),
                   ],
