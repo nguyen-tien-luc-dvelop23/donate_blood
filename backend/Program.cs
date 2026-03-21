@@ -88,13 +88,18 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     
+    // Drop old table if schema is wrong, then recreate
+    context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `Users`;");
+    
     // Create Users table explicitly using raw SQL
     context.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS `Users` (
-            `Id` int NOT NULL AUTO_INCREMENT,
-            `PhoneNumber` varchar(255) NOT NULL,
+            `Id` char(36) NOT NULL,
+            `PhoneNumber` varchar(20) NOT NULL,
             `PasswordHash` longtext NOT NULL,
-            `BloodType` longtext NOT NULL,
+            `BloodType` varchar(10) NOT NULL,
+            `MedicalInfo` longtext NOT NULL,
+            `CreatedAt` datetime(6) NOT NULL,
             PRIMARY KEY (`Id`),
             UNIQUE KEY `IX_Users_PhoneNumber` (`PhoneNumber`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
