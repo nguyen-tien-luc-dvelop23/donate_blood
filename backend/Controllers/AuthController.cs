@@ -32,6 +32,7 @@ public class AuthController : ControllerBase
         {
             PhoneNumber = request.PhoneNumber,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            FullName = request.FullName ?? string.Empty,
             BloodType = request.BloodType ?? string.Empty
         };
 
@@ -49,7 +50,7 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid phone number or password");
 
         var token = GenerateJwtToken(user);
-        return Ok(new { Token = token, User = new { user.Id, user.PhoneNumber, user.BloodType } });
+        return Ok(new { Token = token, User = new { user.Id, user.PhoneNumber, user.FullName, user.BloodType } });
     }
 
     [HttpPost("send-otp")]
@@ -86,6 +87,7 @@ public class RegisterRequest
 {
     public string PhoneNumber { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string? FullName { get; set; }
     public string? BloodType { get; set; }
 }
 

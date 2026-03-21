@@ -14,6 +14,9 @@ public class User
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
 
+    [MaxLength(100)]
+    public string FullName { get; set; } = string.Empty;
+
     [MaxLength(10)]
     public string BloodType { get; set; } = string.Empty;
 

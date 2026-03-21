@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
 class ApiClient {
-  static const String baseUrl = 'https://donate-blood-auj0.onrender.com/api';
+  static const String baseUrl = 'https://donate-blood-1.onrender.com/api';
   
   final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,

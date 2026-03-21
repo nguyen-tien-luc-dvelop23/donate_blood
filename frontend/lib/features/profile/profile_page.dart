@@ -12,6 +12,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String? _phone;
+  String? _fullName;
+  String? _bloodType;
   final _authService = AuthService();
 
   @override
@@ -22,7 +24,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _loadUser() async {
     final phone = await _authService.getLoggedPhone();
-    setState(() => _phone = phone);
+    final name = await _authService.getLoggedName();
+    final bloodType = await _authService.getLoggedBloodType();
+    setState(() {
+      _phone = phone;
+      _fullName = name;
+      _bloodType = bloodType;
+    });
   }
 
   @override
@@ -41,18 +49,28 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Center(
+            Center(
               child: Stack(
                 children: [
                   CircleAvatar(
                     radius: 55,
-                    backgroundColor: Color(0xFFE65100),
+                    backgroundColor: const Color(0xFFE65100),
                     child: CircleAvatar(
                       radius: 52,
-                      backgroundImage: NetworkImage("https://i.pravatar.cc/150?u=profile"),
+                      backgroundColor: const Color(0xFF2D2726),
+                      child: Text(
+                        _fullName != null && _fullName!.isNotEmpty
+                            ? _fullName![0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFE65100),
+                        ),
+                      ),
                     ),
                   ),
-                  Positioned(
+                  const Positioned(
                     bottom: 0,
                     right: 0,
                     child: CircleAvatar(
@@ -65,9 +83,9 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Nguyễn Văn A",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            Text(
+              _fullName ?? "Đang tải...",
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 4),
             Text(
@@ -76,8 +94,8 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 30),
 
-            _buildProfileItem(Icons.bloodtype, "Nhóm máu", "O+"),
-            _buildProfileItem(Icons.calendar_today, "Lần hiến gần nhất", "12/06/2025"),
+            _buildProfileItem(Icons.bloodtype, "Nhóm máu", _bloodType ?? "Chưa cập nhật"),
+            _buildProfileItem(Icons.calendar_today, "Lần hiến gần nhất", "Chưa có"),
             _buildProfileItem(Icons.location_on, "Khu vực", "Hà Nội"),
             _buildProfileItem(Icons.phone, "Số điện thoại", _phone ?? "Đang tải..."),
 

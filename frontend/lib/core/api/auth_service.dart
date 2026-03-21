@@ -16,11 +16,15 @@ class AuthService {
         final data = response.data;
         final token = data['token'];
         final phone = data['user']['phoneNumber'];
+        final fullName = data['user']['fullName'] ?? '';
+        final bloodType = data['user']['bloodType'] ?? '';
         
-        // Save token and phone
+        // Save token, phone, name, bloodType
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await prefs.setString('phone', phone);
+        await prefs.setString('fullName', fullName);
+        await prefs.setString('bloodType', bloodType);
         
         return data;
       }
@@ -30,11 +34,12 @@ class AuthService {
     return null;
   }
 
-  Future<bool> register(String phoneNumber, String password, String? bloodType) async {
+  Future<bool> register(String phoneNumber, String password, String fullName, String? bloodType) async {
     try {
       final response = await _dio.post('/Auth/register', data: {
         'phoneNumber': phoneNumber,
         'password': password,
+        'fullName': fullName,
         'bloodType': bloodType,
       });
 
@@ -49,10 +54,22 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('phone');
+    await prefs.remove('fullName');
+    await prefs.remove('bloodType');
   }
 
   Future<String?> getLoggedPhone() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('phone');
+  }
+
+  Future<String?> getLoggedName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('fullName');
+  }
+
+  Future<String?> getLoggedBloodType() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('bloodType');
   }
 }

@@ -97,6 +97,7 @@ using (var scope = app.Services.CreateScope())
             `Id` char(36) NOT NULL,
             `PhoneNumber` varchar(20) NOT NULL,
             `PasswordHash` longtext NOT NULL,
+            `FullName` varchar(100) NOT NULL DEFAULT '',
             `BloodType` varchar(10) NOT NULL,
             `MedicalInfo` longtext NOT NULL,
             `CreatedAt` datetime(6) NOT NULL,

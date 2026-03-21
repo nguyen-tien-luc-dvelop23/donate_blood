@@ -12,6 +12,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _dateController = TextEditingController();
   String _selectedBloodType = 'A+';
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _phoneController.dispose();
     _dateController.dispose();
     _passwordController.dispose();
@@ -29,10 +31,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
+    final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (phone.isEmpty || password.isEmpty) {
+    if (name.isEmpty || phone.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
       );
@@ -41,7 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await _authService.register(phone, password, _selectedBloodType);
+    final success = await _authService.register(phone, password, name, _selectedBloodType);
 
     setState(() => _isLoading = false);
 
@@ -145,6 +148,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(width: 8),
                   Text('+ 84', style: TextStyle(color: AppColors.textPrimary)),
                 ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Họ và tên',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _nameController,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Nhập họ và tên',
+                suffixIcon: Icon(Icons.person_outline, color: AppColors.textMuted),
               ),
             ),
             const SizedBox(height: 16),
