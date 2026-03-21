@@ -164,6 +164,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 suffixIcon: Icon(Icons.phone_outlined, color: AppColors.textMuted),
               ),
             ),
+            const SizedBox(height: 16),
+            Text(
+              'Mật khẩu',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Nhập mật khẩu',
+                suffixIcon: Icon(Icons.lock_outline, color: AppColors.textMuted),
+              ),
+            ),
             const SizedBox(height: 24),
             _buildMedicalInfoSection(),
             const SizedBox(height: 24),
