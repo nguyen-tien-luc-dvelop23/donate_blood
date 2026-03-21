@@ -101,7 +101,7 @@ using (var scope = app.Services.CreateScope())
             `BloodType` varchar(10) NOT NULL,
             `MedicalInfo` longtext NOT NULL,
             `BloodVolume` double NOT NULL DEFAULT 0.0,
-            `DonationCount` int NOT NULL DEFAULT 0,
+            `AvatarUrl` varchar(500) NOT NULL DEFAULT '',
             `CreatedAt` datetime(6) NOT NULL,
             PRIMARY KEY (`Id`),
             UNIQUE KEY `IX_Users_PhoneNumber` (`PhoneNumber`)
@@ -121,6 +121,23 @@ using (var scope = app.Services.CreateScope())
             `CreatedAt` datetime(6) NOT NULL,
             PRIMARY KEY (`Id`),
             CONSTRAINT `FK_SosRequests_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+
+    // Attempt to alter Users table if adding new columns
+    try { context.Database.ExecuteSqlRaw("ALTER TABLE `Users` ADD COLUMN `AvatarUrl` varchar(500) NOT NULL DEFAULT '';"); } catch { }
+    try { context.Database.ExecuteSqlRaw("ALTER TABLE `Users` DROP COLUMN `DonationCount`;"); } catch { }
+
+    // Create DonationRecords table explicitly
+    context.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS `DonationRecords` (
+            `Id` char(36) NOT NULL,
+            `UserId` char(36) NOT NULL,
+            `HospitalName` varchar(255) NOT NULL,
+            `DonationDate` datetime(6) NOT NULL,
+            `CreatedAt` datetime(6) NOT NULL,
+            PRIMARY KEY (`Id`),
+            CONSTRAINT `FK_DonationRecords_Users` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
 

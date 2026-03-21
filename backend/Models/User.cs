@@ -22,9 +22,10 @@ public class User
 
     public string MedicalInfo { get; set; } = string.Empty;
 
-    public double BloodVolume { get; set; } = 0.0;
+    [MaxLength(500)]
+    public string AvatarUrl { get; set; } = string.Empty;
 
-    public int DonationCount { get; set; } = 0;
+    public double BloodVolume { get; set; } = 0.0;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

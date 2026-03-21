@@ -50,7 +50,47 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid phone number or password");
 
         var token = GenerateJwtToken(user);
-        return Ok(new { Token = token, User = new { user.Id, user.PhoneNumber, user.FullName, user.BloodType, user.BloodVolume, user.DonationCount } });
+        var donationCount = await _context.DonationRecords.CountAsync(d => d.UserId == user.Id);
+
+        return Ok(new { 
+            Token = token, 
+            User = new { 
+                user.Id, 
+                user.PhoneNumber, 
+                user.FullName, 
+                user.BloodType, 
+                user.BloodVolume, 
+                user.AvatarUrl,
+                DonationCount = donationCount 
+            } 
+        });
+    }
+
+    public class UpdateProfileRequest
+    {
+        public string? FullName { get; set; }
+        public string? BloodType { get; set; }
+        public string? AvatarUrl { get; set; }
+    }
+
+    [Authorize]
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            return Unauthorized("User ID not found in token");
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound("User not found");
+
+        if (!string.IsNullOrEmpty(request.FullName)) user.FullName = request.FullName;
+        if (!string.IsNullOrEmpty(request.BloodType)) user.BloodType = request.BloodType;
+        if (request.AvatarUrl != null) user.AvatarUrl = request.AvatarUrl; // Allow empty string to clear avatar
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { Message = "Profile updated successfully" });
     }
 
     [HttpPost("send-otp")]

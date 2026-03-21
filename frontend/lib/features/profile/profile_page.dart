@@ -3,6 +3,8 @@ import '../auth/login/login_screen.dart';
 import '../admin/admin_screen.dart';
 import '../../core/api/auth_service.dart';
 import '../history/history_page.dart';
+import '../history/donation_history_page.dart';
+import 'edit_profile_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -15,6 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _phone;
   String? _fullName;
   String? _bloodType;
+  String? _avatarUrl;
   double _bloodVolume = 0.0;
   int _donationCount = 0;
   bool _isReadyToDonate = true;
@@ -31,16 +34,20 @@ class _ProfilePageState extends State<ProfilePage> {
     final phone = await _authService.getLoggedPhone();
     final name = await _authService.getLoggedName();
     final bloodType = await _authService.getLoggedBloodType();
+    final avatarUrl = await _authService.getLoggedAvatarUrl();
     final bloodVol = await _authService.getLoggedBloodVolume();
     final donationCount = await _authService.getLoggedDonationCount();
 
-    setState(() {
-      _phone = phone;
-      _fullName = name;
-      _bloodType = bloodType;
-      _bloodVolume = bloodVol;
-      _donationCount = donationCount;
-    });
+    if (mounted) {
+      setState(() {
+        _phone = phone;
+        _fullName = name;
+        _bloodType = bloodType;
+        _avatarUrl = avatarUrl;
+        _bloodVolume = bloodVol;
+        _donationCount = donationCount;
+      });
+    }
   }
 
   @override
@@ -62,32 +69,49 @@ class _ProfilePageState extends State<ProfilePage> {
             Center(
               child: Stack(
                 children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF2D2726), width: 3),
-                      color: const Color(0xFF2D2726),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _fullName != null && _fullName!.isNotEmpty ? _fullName![0].toUpperCase() : '?',
-                        style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                  GestureDetector(
+                    onTap: () async {
+                      final updated = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                      if (updated == true) _loadUser();
+                    },
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF2D2726), width: 3),
+                      ),
+                      child: CircleAvatar(
+                        backgroundColor: const Color(0xFF2D2726),
+                        backgroundImage: (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+                            ? NetworkImage(_avatarUrl!)
+                            : null,
+                        child: (_avatarUrl == null || _avatarUrl!.isEmpty)
+                            ? Text(
+                                _fullName != null && _fullName!.isNotEmpty ? _fullName![0].toUpperCase() : '?',
+                                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                              )
+                            : null,
                       ),
                     ),
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF1E1412), width: 2),
+                    child: GestureDetector(
+                      onTap: () async {
+                        final updated = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                        if (updated == true) _loadUser();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF1E1412), width: 2),
+                        ),
+                        child: const Icon(Icons.camera_alt, size: 14, color: Colors.black87),
                       ),
-                      child: const Icon(Icons.camera_alt, size: 14, color: Colors.black87),
                     ),
                   ),
                 ],
@@ -252,7 +276,9 @@ class _ProfilePageState extends State<ProfilePage> {
               decoration: BoxDecoration(color: const Color(0xFF2A1C1A), borderRadius: BorderRadius.circular(16)),
               child: Column(
                 children: [
-                  _buildListTile(Icons.history, Colors.redAccent, "Lịch sử hiến tặng", onTap: () {}),
+                  _buildListTile(Icons.history, Colors.redAccent, "Lịch sử hiến tặng", onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const DonationHistoryPage()));
+                  }),
                   Divider(color: Colors.white.withOpacity(0.05), height: 1, indent: 56),
                   _buildListTile(Icons.campaign, Colors.orangeAccent, "SOS đã tạo", onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage()));
@@ -272,7 +298,10 @@ class _ProfilePageState extends State<ProfilePage> {
               decoration: BoxDecoration(color: const Color(0xFF2A1C1A), borderRadius: BorderRadius.circular(16)),
               child: Column(
                 children: [
-                  _buildListTile(Icons.person_outline, Colors.blueAccent, "Chỉnh sửa thông tin", onTap: () {}),
+                  _buildListTile(Icons.person_outline, Colors.blueAccent, "Chỉnh sửa thông tin", onTap: () async {
+                    final updated = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+                    if (updated == true) _loadUser();
+                  }),
                   Divider(color: Colors.white.withOpacity(0.05), height: 1, indent: 56),
                   _buildListTile(Icons.notifications_none, Colors.purpleAccent, "Cài đặt thông báo", onTap: () {}),
                 ],

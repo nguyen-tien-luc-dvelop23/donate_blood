@@ -1,10 +1,5 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/custom_button.dart';
+import '../../core/api/auth_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -14,258 +9,212 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final TextEditingController _nameController = TextEditingController(text: 'Kiều Tuấn Dũng');
-  final TextEditingController _dateController = TextEditingController(text: '10/15/2025');
-  String _selectedBloodType = 'O+';
-  final List<String> _bloodTypes = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+  final _authService = AuthService();
   
-  XFile? _imageFile;
-  final ImagePicker _picker = ImagePicker();
+  final _nameController = TextEditingController();
+  String _selectedBloodType = "A+";
+  String _selectedAvatarUrl = "";
+  bool _isLoading = false;
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+  final List<String> _bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  
+  final List<String> _avatarOptions = [
+    "", // Empty means initials
+    "https://i.pravatar.cc/150?img=11",
+    "https://i.pravatar.cc/150?img=12",
+    "https://i.pravatar.cc/150?img=68",
+    "https://i.pravatar.cc/150?img=60",
+    "https://i.pravatar.cc/150?img=47",
+    "https://i.pravatar.cc/150?img=32",
+    "https://i.pravatar.cc/150?img=50",
+    "https://i.pravatar.cc/150?img=5",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentData();
+  }
+
+  Future<void> _loadCurrentData() async {
+    final name = await _authService.getLoggedName();
+    final bloodType = await _authService.getLoggedBloodType();
+    final avatarUrl = await _authService.getLoggedAvatarUrl();
+
+    if (mounted) {
       setState(() {
-        _imageFile = pickedFile;
+        _nameController.text = name ?? "";
+        if (_bloodTypes.contains(bloodType)) {
+          _selectedBloodType = bloodType!;
+        }
+        _selectedAvatarUrl = avatarUrl ?? "";
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    ImageProvider backgroundImage;
-    if (_imageFile == null) {
-      backgroundImage = const NetworkImage('https://ui-avatars.com/api/?name=Kieu+Tuan+Dung&background=C0392B&color=fff&size=150');
-    } else if (kIsWeb) {
-      backgroundImage = NetworkImage(_imageFile!.path);
-    } else {
-      backgroundImage = FileImage(File(_imageFile!.path));
-    }
-
     return Scaffold(
+      backgroundColor: const Color(0xFF1E1412),
       appBar: AppBar(
-        title: const Text('Chỉnh sửa hồ sơ'),
+        title: const Text("Chỉnh sửa thông tin", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-             Navigator.maybePop(context);
-          },
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onTap: () => Navigator.pop(context, false), // return false = no changes
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar
-            Center(
-              child: Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: backgroundImage,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
+            const Text(
+              "Ảnh đại diện",
+              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 80,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _avatarOptions.length,
+                itemBuilder: (context, index) {
+                  final url = _avatarOptions[index];
+                  final isSelected = _selectedAvatarUrl == url;
+                  
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedAvatarUrl = url),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.blueAccent : Colors.transparent,
+                          width: 3,
                         ),
-                        padding: const EdgeInsets.all(8),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                      ),
+                      child: CircleAvatar(
+                        radius: 35,
+                        backgroundColor: const Color(0xFF2D2726),
+                        backgroundImage: url.isNotEmpty ? NetworkImage(url) : null,
+                        child: url.isEmpty 
+                            ? const Icon(Icons.person_outline, color: Colors.grey, size: 30)
+                            : null,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _pickImage,
-              child: const Text(
-                'Chạm để thay đổi ảnh đại diện',
-                style: TextStyle(color: AppColors.primary, fontSize: 12),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 24),
 
-            // Name Field
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Họ và tên', style: Theme.of(context).textTheme.bodyMedium),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: AppColors.cardColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: const Icon(Icons.person, color: Colors.grey),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Medical Info Warning
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Thông tin y tế', style: Theme.of(context).textTheme.titleMedium),
-            ),
+            const Text("Họ và Tên", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFF2A1C1A),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.lock_outline, color: AppColors.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Thông tin này chỉ được chia sẻ với đội ngũ y tế khi bạn kích hoạt SOS',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Blood Type Selector
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Nhóm máu của bạn', style: Theme.of(context).textTheme.bodyMedium),
-            ),
-            const SizedBox(height: 8),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.5,
-              ),
-              itemCount: _bloodTypes.length,
-              itemBuilder: (context, index) {
-                final type = _bloodTypes[index];
-                final isSelected = type == _selectedBloodType;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedBloodType = type;
-                    });
-                  },
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.background : AppColors.cardColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: isSelected
-                              ? Border.all(color: AppColors.primary, width: 2)
-                              : Border.all(color: Colors.grey.withOpacity(0.2)),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          type,
-                          style: TextStyle(
-                            color: isSelected ? AppColors.primary : Colors.grey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      if (isSelected)
-                        const Positioned(
-                          top: -5,
-                          right: -5,
-                          child: Icon(Icons.check_circle, color: AppColors.primary, size: 16),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // Last Donation Date
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Ngày hiến máu gần nhất (nếu có)', style: Theme.of(context).textTheme.bodyMedium),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () async {
-                final DateTime? picked = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                  builder: (context, child) {
-                    return Theme(
-                      data: Theme.of(context).copyWith(
-                        colorScheme: const ColorScheme.dark(
-                          primary: AppColors.primary,
-                          onPrimary: Colors.white,
-                          surface: AppColors.cardColor,
-                          onSurface: Colors.white,
-                        ),
-                      ),
-                      child: child!,
-                    );
-                  },
-                );
-                if (picked != null) {
-                  setState(() {
-                    _dateController.text = DateFormat('MM/dd/yyyy').format(picked);
-                  });
-                }
-              },
-              child: AbsorbPointer(
-                child: TextFormField(
-                  controller: _dateController,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: AppColors.cardColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    suffixIcon: const Icon(Icons.calendar_today, color: Colors.grey),
-                  ),
+              child: TextField(
+                controller: _nameController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: "Nhập họ tên của bạn",
+                  hintStyle: TextStyle(color: Colors.white30),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Khoảng cách giữa các lần hiến máu nên lớn hơn 12 tuần.',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
-            // Save Button
-            CustomButton(
-              text: 'Lưu thay đổi',
-              onPressed: () {
-                // Navigate to next screen for demo flow or show snackbar
-                 Navigator.pushNamed(context, '/sos_detail'); // Placeholder navigation
-              },
-              icon: Icons.check,
+            const Text("Nhóm máu", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2A1C1A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedBloodType,
+                  isExpanded: true,
+                  dropdownColor: const Color(0xFF2D2726),
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.white54),
+                  items: _bloodTypes.map((String type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _selectedBloodType = newValue;
+                      });
+                    }
+                  },
+                ),
+              ),
             ),
-             const SizedBox(height: 32),
+            const SizedBox(height: 40),
+
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _saveProfile,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE65100),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isLoading 
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white))
+                    : const Text(
+                        "Lưu Thay Đổi",
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _saveProfile() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng nhập tên')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final success = await _authService.updateProfile(
+      fullName: name,
+      bloodType: _selectedBloodType,
+      avatarUrl: _selectedAvatarUrl,
+    );
+
+    setState(() => _isLoading = false);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật thành công')));
+      Navigator.pop(context, true); // return true = changes made
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật thất bại')));
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 }
