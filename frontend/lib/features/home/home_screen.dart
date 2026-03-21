@@ -5,6 +5,7 @@ import '../sos/sos_form_page.dart';
 import '../map/blood_map_page.dart';
 import '../profile/profile_page.dart';
 import '../../core/api/auth_service.dart';
+import '../history/history_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = const [
     _HomePage(),
     BloodMapPage(),
-    Center(child: Text('History Page')), // Placeholder cho Lịch sử
+    HistoryPage(),
     ProfilePage(),
   ];
 

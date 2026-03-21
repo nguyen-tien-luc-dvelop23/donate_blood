@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/api/sos_service.dart';
 import 'sos_success_dialog.dart';
 
 class SOSFormPage extends StatefulWidget {
@@ -9,7 +10,20 @@ class SOSFormPage extends StatefulWidget {
 }
 
 class _SOSFormPageState extends State<SOSFormPage> {
-  String selectedBlood = "A+";
+  String _selectedBlood = "A+";
+  final _locationController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  String _selectedReason = "Cấp cứu";
+  final List<String> _reasons = ["Cấp cứu", "Phẫu thuật", "Tai nạn", "Thiếu máu", "Khác"];
+  final _sosService = SosService();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _locationController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,17 +98,43 @@ class _SOSFormPageState extends State<SOSFormPage> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => const SOSSuccessDialog(),
+                  onPressed: _isLoading ? null : () async {
+                    if (_locationController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Vui lòng nhập địa điểm')),
+                      );
+                      return;
+                    }
+
+                    setState(() => _isLoading = true);
+
+                    final success = await _sosService.createSos(
+                      bloodType: _selectedBlood,
+                      location: _locationController.text.trim(),
+                      reason: _selectedReason,
+                      description: _descriptionController.text.trim(),
                     );
+
+                    setState(() => _isLoading = false);
+
+                    if (success && mounted) {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => const SOSSuccessDialog(),
+                      );
+                    } else if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Lỗi khi đăng SOS. Vui lòng thử lại.')),
+                      );
+                    }
                   },
-                  icon: const Icon(Icons.volume_up, color: Colors.white),
-                  label: const Text(
-                    "Đăng SOS Khẩn cấp",
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  icon: _isLoading 
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.volume_up, color: Colors.white),
+                  label: Text(
+                    _isLoading ? "ĐANG XỬ LÝ..." : "Đăng SOS Khẩn cấp",
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE65100),
@@ -180,9 +220,9 @@ class _SOSFormPageState extends State<SOSFormPage> {
       itemCount: types.length,
       itemBuilder: (context, index) {
         final type = types[index];
-        final isSelected = selectedBlood == type;
+        final isSelected = _selectedBlood == type;
         return GestureDetector(
-          onTap: () => setState(() => selectedBlood = type),
+          onTap: () => setState(() => _selectedBlood = type),
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
@@ -230,10 +270,11 @@ class _SOSFormPageState extends State<SOSFormPage> {
         children: [
           const Icon(Icons.location_on, color: Colors.grey, size: 20),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: TextField(
-              style: TextStyle(color: Colors.white, fontSize: 14),
-              decoration: InputDecoration(
+              controller: _locationController,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: const InputDecoration(
                 hintText: "Bệnh viện Chợ Rẫy, Quận 5",
                 hintStyle: TextStyle(color: Colors.white38),
                 border: InputBorder.none,
@@ -254,17 +295,33 @@ class _SOSFormPageState extends State<SOSFormPage> {
         color: const Color(0xFF2D2726),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.work, color: Colors.grey, size: 20),
-          SizedBox(width: 12),
+          const Icon(Icons.work, color: Colors.grey, size: 20),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              "Cấp cứu",
-              style: TextStyle(color: Colors.white, fontSize: 14),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedReason,
+                dropdownColor: const Color(0xFF2D2726),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                items: _reasons.map((String reason) {
+                  return DropdownMenuItem<String>(
+                    value: reason,
+                    child: Text(reason),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedReason = newValue;
+                    });
+                  }
+                },
+              ),
             ),
           ),
-          Icon(Icons.keyboard_arrow_down, color: Colors.grey),
         ],
       ),
     );
@@ -279,10 +336,11 @@ class _SOSFormPageState extends State<SOSFormPage> {
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: Colors.white10),
       ),
-      child: const TextField(
+      child: TextField(
+        controller: _descriptionController,
         maxLines: null,
-        style: TextStyle(color: Colors.white, fontSize: 13),
-        decoration: InputDecoration(
+        style: const TextStyle(color: Colors.white, fontSize: 13),
+        decoration: const InputDecoration(
           hintText: "Mô tả thêm về tình trạng, số lượng đơn vị máu cần...",
           hintStyle: TextStyle(color: Colors.white24),
           border: InputBorder.none,

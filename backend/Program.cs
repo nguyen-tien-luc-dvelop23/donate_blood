@@ -106,6 +106,22 @@ using (var scope = app.Services.CreateScope())
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
 
+    // Create SosRequests table explicitly using raw SQL
+    context.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS `SosRequests` (
+            `Id` char(36) NOT NULL,
+            `UserId` char(36) NOT NULL,
+            `BloodType` varchar(10) NOT NULL,
+            `Location` varchar(255) NOT NULL,
+            `Reason` varchar(100) NOT NULL,
+            `Description` longtext NOT NULL,
+            `Status` varchar(20) NOT NULL,
+            `CreatedAt` datetime(6) NOT NULL,
+            PRIMARY KEY (`Id`),
+            CONSTRAINT `FK_SosRequests_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+
     // Seed admin if not exists
     if (!context.Users.Any(u => u.PhoneNumber == "admin"))
     {
