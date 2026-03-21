@@ -1,8 +1,28 @@
-import 'package:flutter/material.dart';
 import '../auth/login/login_screen.dart';
+import '../admin/admin_screen.dart';
+import '../../core/api/auth_service.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String? _phone;
+  final _authService = AuthService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final phone = await _authService.getLoggedPhone();
+    setState(() => _phone = phone);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +78,27 @@ class ProfilePage extends StatelessWidget {
             _buildProfileItem(Icons.bloodtype, "Nhóm máu", "O+"),
             _buildProfileItem(Icons.calendar_today, "Lần hiến gần nhất", "12/06/2025"),
             _buildProfileItem(Icons.location_on, "Khu vực", "Hà Nội"),
-            _buildProfileItem(Icons.phone, "Số điện thoại", "0987 654 ***"),
+            _buildProfileItem(Icons.phone, "Số điện thoại", _phone ?? "Đang tải..."),
+
+            if (_phone == 'admin') ...[
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
+                  },
+                  icon: const Icon(Icons.admin_panel_settings),
+                  label: const Text("QUẢN LÝ NGƯỜI DÙNG", style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 40),
             SizedBox(

@@ -15,10 +15,12 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = response.data;
         final token = data['token'];
+        final phone = data['user']['phoneNumber'];
         
-        // Save token
+        // Save token and phone
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
+        await prefs.setString('phone', phone);
         
         return data;
       }
@@ -46,5 +48,11 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('phone');
+  }
+
+  Future<String?> getLoggedPhone() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('phone');
   }
 }
