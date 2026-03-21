@@ -69,13 +69,22 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Seed Admin User
+// Create tables and Seed Admin User
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     
-    // Ensure database is created and migrations are applied
-    context.Database.EnsureCreated();
+    // Create Users table explicitly using raw SQL
+    context.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS `Users` (
+            `Id` int NOT NULL AUTO_INCREMENT,
+            `PhoneNumber` varchar(255) NOT NULL,
+            `PasswordHash` longtext NOT NULL,
+            `BloodType` longtext NOT NULL,
+            PRIMARY KEY (`Id`),
+            UNIQUE KEY `IX_Users_PhoneNumber` (`PhoneNumber`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
 
     // Seed admin if not exists
     if (!context.Users.Any(u => u.PhoneNumber == "admin"))
