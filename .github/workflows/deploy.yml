@@ -1,0 +1,36 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.10.7' # Match pubspec.yaml
+      
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: frontend
+        
+      - name: Build Web
+        run: flutter build web --release --base-href /donate_blood/
+        working-directory: frontend
+        
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/build/web

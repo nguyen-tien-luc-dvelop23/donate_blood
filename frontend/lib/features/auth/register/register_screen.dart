@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../otp/otp_screen.dart';
+import '../../../core/api/auth_service.dart';
+import '../login/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,12 +16,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _dateController = TextEditingController(text: 'Nhập ngày hiến máu gần nhất (nếu có)');
   String _selectedBloodType = 'A+';
   final List<String> _bloodTypes = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+  final _passwordController = TextEditingController();
+  final _authService = AuthService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _phoneController.dispose();
     _dateController.dispose();
+    _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (phone.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final success = await _authService.register(phone, password, _selectedBloodType);
+
+    setState(() => _isLoading = false);
+
+    if (success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đăng ký thành công! Vui lòng đăng nhập.')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đăng ký thất bại. Số điện thoại có thể đã tồn tại.')),
+        );
+      }
+    }
   }
 
   Future<void> _selectDate() async {
@@ -184,16 +226,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OtpScreen(phone: _phoneController.text),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.send, size: 20),
-                label: const Text('Gửi mã OTP'),
+                onPressed: _isLoading ? null : _handleRegister,
+                icon: _isLoading 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.person_add, size: 20),
+                label: Text(_isLoading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG KÝ'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

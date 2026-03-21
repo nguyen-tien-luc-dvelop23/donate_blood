@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../register/register_screen.dart';
 import '../../home/home_screen.dart';
 import '../forgot_password/forgot_password_screen.dart';
+import '../../../core/api/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,8 +14,43 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController(text: 'Nhập tài khoản hoặc số điện thoại');
-  final _passwordController = TextEditingController(text: 'Nhập mật khẩu');
+  final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  final _authService = AuthService();
+
+  Future<void> _handleLogin() async {
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (phone.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final result = await _authService.login(phone, password);
+
+    setState(() => _isLoading = false);
+
+    if (result != null) {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đăng nhập thất bại. Vui lòng kiểm tra lại.')),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -152,14 +188,11 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const HomeScreen()),
-                    );
-                  },
-                  icon: const Icon(Icons.arrow_forward, size: 20),
-                  label: const Text('ĐĂNG NHẬP'),
+                  onPressed: _isLoading ? null : _handleLogin,
+                  icon: _isLoading 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.arrow_forward, size: 20),
+                  label: Text(_isLoading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG NHẬP'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
