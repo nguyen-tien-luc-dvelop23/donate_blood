@@ -63,7 +63,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onTap: () => Navigator.pop(context, false), // return false = no changes
+          onPressed: () => Navigator.pop(context, false), // return false = no changes
         ),
       ),
       body: SingleChildScrollView(

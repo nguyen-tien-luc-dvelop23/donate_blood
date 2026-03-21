@@ -40,7 +40,7 @@ class _DonationHistoryPageState extends State<DonationHistoryPage> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onTap: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: _isLoading
