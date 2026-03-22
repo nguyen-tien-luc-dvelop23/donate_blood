@@ -5,8 +5,10 @@ import '../sos/sos_form_page.dart';
 import '../map/blood_map_page.dart';
 import '../profile/profile_page.dart';
 import '../../core/api/auth_service.dart';
+import '../../core/api/sos_service.dart';
 import '../history/history_page.dart';
 import '../honor/honor_screen.dart';
+import '../sos/confirm_support_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -106,11 +108,44 @@ class _HomePageState extends State<_HomePage> {
   String? _fullName;
   String? _phone;
   final _authService = AuthService();
+  
+  List<dynamic> _activeSosList = [];
+  bool _isLoadingSos = true;
+  final _sosService = SosService();
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadActiveSos();
+  }
+
+  Future<void> _loadActiveSos() async {
+    final list = await _sosService.getActiveSos();
+    if (list.isEmpty) {
+      list.addAll([
+        {
+          'id': 'dummy1',
+          'bloodType': 'O+',
+          'location': 'Bệnh viện Bạch Mai',
+          'reason': 'Tai nạn giao thông',
+          'description': 'Cần gấp 2 đơn vị máu toàn phần. Tình trạng bệnh nhân đang nguy kịch',
+        },
+        {
+          'id': 'dummy2',
+          'bloodType': 'A+',
+          'location': 'Bệnh viện Nhi Đồng 2',
+          'reason': 'Phẫu thuật gấp',
+          'description': 'Bé gái 7 tuổi cần tiểu cầu gấp cho ca phẫu thuật tim',
+        }
+      ]);
+    }
+    if (mounted) {
+      setState(() {
+        _activeSosList = list;
+        _isLoadingSos = false;
+      });
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -229,26 +264,26 @@ class _HomePageState extends State<_HomePage> {
               // Horizontal list of SOS Cards
               SizedBox(
                 height: 200,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    _buildSOSCard(
-                      bloodType: 'O+',
-                      hospitalName: 'Bệnh viện Bạch mai',
-                      noteText: 'Cần gấp 2 đơn vị Tai nạn',
-                      timeAndDistance: '5 phút trước 1.2km',
-                      buttonText: 'Lực có thể giúp',
-                    ),
-                    _buildSOSCard(
-                      bloodType: 'A+',
-                      hospitalName: 'BV Nhi',
-                      noteText: 'Cần tiểu cầu',
-                      timeAndDistance: '20 phút trước',
-                      buttonText: 'Tôi có thể giúp',
-                    ),
-                  ],
-                ),
+                child: _isLoadingSos 
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6A00)))
+                    : _activeSosList.isEmpty
+                        ? const Center(child: Text('Chưa có yêu cầu SOS nào', style: TextStyle(color: Colors.white)))
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _activeSosList.length,
+                            itemBuilder: (context, index) {
+                              final sos = _activeSosList[index];
+                              return _buildSOSCard(
+                                bloodType: sos['bloodType']?.toString() ?? '?',
+                                hospitalName: sos['location']?.toString() ?? 'Chưa rõ',
+                                noteText: '${sos['reason']} - Cần gấp',
+                                timeAndDistance: '5 phút trước - 1.2km', // dummy
+                                buttonText: 'Tôi có thể giúp',
+                                sosData: sos,
+                              );
+                            },
+                          ),
               ),
               const SizedBox(height: 16),
 
@@ -361,8 +396,16 @@ class _HomePageState extends State<_HomePage> {
     required String noteText,
     required String timeAndDistance,
     required String buttonText,
+    required dynamic sosData,
   }) {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ConfirmSupportScreen(sosData: sosData)),
+        );
+      },
+      child: Container(
       width: 250,
       margin: const EdgeInsets.only(right: 16),
       padding: const EdgeInsets.all(16),

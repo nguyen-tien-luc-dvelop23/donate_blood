@@ -1,216 +1,316 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/custom_button.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../../core/api/sos_service.dart';
 
-class ConfirmSupportScreen extends StatelessWidget {
-  const ConfirmSupportScreen({super.key});
+class ConfirmSupportScreen extends StatefulWidget {
+  final dynamic sosData;
+  const ConfirmSupportScreen({super.key, required this.sosData});
+
+  @override
+  State<ConfirmSupportScreen> createState() => _ConfirmSupportScreenState();
+}
+
+class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
+  bool _isConfirming = false;
+
+  Future<void> _handleConfirm() async {
+    setState(() => _isConfirming = true);
+    final id = widget.sosData['id'];
+    if (id != null && id.toString().length > 10) { // Call API if real guid
+      await SosService().confirmSos(id.toString());
+    } else {
+      await Future.delayed(const Duration(seconds: 1)); // Delay for dummy
+    }
+    setState(() => _isConfirming = false);
+    
+    if (!mounted) return;
+    Navigator.pushNamed(context, '/sos_success');
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Standard mock point for map
+    final location = const LatLng(21.000, 105.845);
+
     return Scaffold(
       body: Stack(
         children: [
-          // Map Background Placeholder
+          // 1. Bottom Dark Background
           Container(
-            color: Colors.grey[800],
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.map, size: 100, color: Colors.grey),
-                  Text('Map Placeholder', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
+            color: const Color(0xFF1B110F),
           ),
           
-          // Header Overlay (Back button)
+          // 2. Top Header Map
           Positioned(
-            top: 40,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.45,
+            child: Stack(
               children: [
-                CircleAvatar(
-                  backgroundColor: Colors.black.withOpacity(0.5),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+                FlutterMap(
+                  options: MapOptions(
+                    initialCenter: location,
+                    initialZoom: 15.0,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: location,
+                          width: 40,
+                          height: 40,
+                          child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                // Gradient Overlay
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          const Color(0xFF1B110F).withValues(alpha: 0.5),
+                          const Color(0xFF1B110F).withValues(alpha: 1.0),
+                        ],
+                        stops: const [0.5, 0.8, 1.0],
+                      ),
+                    ),
                   ),
                 ),
-                CircleAvatar(
-                  backgroundColor: Colors.black.withOpacity(0.5),
-                  child: IconButton(
-                    icon: const Icon(Icons.share, color: Colors.white),
-                    onPressed: () {},
+                // Blood Type Badge
+                Positioned(
+                  top: 50,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      widget.sosData['bloodType']?.toString() ?? 'O+',
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ),
+                // Back & Share
+                Positioned(
+                  top: 40,
+                  left: 16,
+                  right: 16,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.share, color: Colors.white),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
+                // Title and Location text
+                Positioned(
+                  bottom: 30, // Above the solid boundary
+                  left: 20,
+                  right: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.sosData['location']?.toString() ?? 'Bệnh viện Bạch Mai',
+                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      const Row(
+                        children: [
+                          Icon(Icons.location_on, color: Colors.grey, size: 16),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '78 Giải Phóng, Phương Mai, Đống Đa', // Dummy sub-address
+                              style: TextStyle(color: Colors.white70, fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
           
-          // Bottom Sheet Content
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C1E1A),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
+          // 3. Scrollable Content (Under header)
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.45,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hospital Header
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on, color: Colors.red),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Bệnh viện Bạch Mai',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              '78 Giải Phóng, Phương Mai, Đống Đa',
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Text('O+', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Emergency Info
+                  // Emergency Info Card
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.cardColor,
-                      borderRadius: BorderRadius.circular(12),
+                      color: const Color(0xFF281C19),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('KHẨN CẤP', style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
+                        const Text('KHẨN CẤP', style: TextStyle(color: Color(0xFFFF6A00), fontSize: 11, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(4),
+                                color: Colors.red.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.emergency, color: Colors.red, size: 16),
+                              child: const Icon(Icons.emergency, color: Colors.red, size: 24),
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Tai nạn giao thông',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.sosData['reason']?.toString() ?? 'Tai nạn giao thông',
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    widget.sosData['description']?.toString() ?? 'Cần gấp 2 đơn vị máu toàn phần. Tình trạng bệnh nhân đang nguy kịch',
+                                    style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Cần gấp 2 đơn vị máu toàn phần. Tình trạng bệnh nhân đang nguy kịch',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
                   
-                  // Distance & Time
+                  // Distance & Time Cards
                   Row(
                     children: [
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppColors.cardColor,
-                            borderRadius: BorderRadius.circular(12),
+                            color: const Color(0xFF281C19),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Column(
+                          child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.navigation, color: AppColors.primary, size: 16),
-                              const SizedBox(height: 8),
-                              const Text('Khoảng cách', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                              const Text('1.2 km', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Icon(Icons.navigation, color: Color(0xFFFF6A00), size: 20),
+                              SizedBox(height: 12),
+                              Text('Khoảng cách', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                              SizedBox(height: 4),
+                              Text('1.2 km', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppColors.cardColor,
-                            borderRadius: BorderRadius.circular(12),
+                            color: const Color(0xFF281C19),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Column(
+                          child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.timer, color: Colors.blue, size: 16),
-                              const SizedBox(height: 8),
-                              const Text('Thời gian đến', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                              const Text('~5 phút', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Icon(Icons.directions_car, color: Colors.blueAccent, size: 20),
+                              SizedBox(height: 12),
+                              Text('Thời gian đến', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                              SizedBox(height: 4),
+                              Text('~5 phút', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
                       ),
                     ],
                   ),
-                   const SizedBox(height: 16),
-
-                  // Mini Map Preview (Placeholder)
-                  Container(
-                    height: 100,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[700],
-                      borderRadius: BorderRadius.circular(12),
-                      image: const DecorationImage(
-                        image: NetworkImage('https://via.placeholder.com/300x100'),
-                        fit: BoxFit.cover,
+                  const SizedBox(height: 16),
+                  
+                  // Mini map
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      height: 120,
+                      width: double.infinity,
+                      child: IgnorePointer(
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter: location,
+                            initialZoom: 14.0,
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: location,
+                                  width: 30,
+                                  height: 30,
+                                  child: const Icon(Icons.location_on, color: Colors.red, size: 30),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: const Center(child: Icon(Icons.location_on, color: Colors.red)),
                   ),
                   const SizedBox(height: 24),
                   
                   // Confirm Button
-                  CustomButton(
-                    text: 'Xác nhận hỗ trợ',
-                    icon: Icons.arrow_forward,
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/sos_success');
-                    },
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton.icon(
+                      onPressed: _isConfirming ? null : _handleConfirm,
+                      icon: _isConfirming 
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const SizedBox.shrink(),
+                      label: Text(
+                        _isConfirming ? "Đang xử lý..." : "Xác nhận hỗ trợ  →",
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF6A00),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
                   ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),

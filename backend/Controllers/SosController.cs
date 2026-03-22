@@ -70,6 +70,46 @@ public class SosController : ControllerBase
 
         return Ok(requests);
     }
+
+    [HttpGet("active")]
+    public async Task<IActionResult> GetActiveSos()
+    {
+        var requests = await _context.SosRequests
+            .Where(s => s.Status == "Pending")
+            .OrderByDescending(s => s.CreatedAt)
+            .Select(s => new {
+                s.Id,
+                s.UserId,
+                s.BloodType,
+                s.Location,
+                s.Reason,
+                s.Description,
+                s.Status,
+                s.CreatedAt
+            })
+            .ToListAsync();
+        return Ok(requests);
+    }
+
+    [HttpPost("{id}/confirm")]
+    public async Task<IActionResult> ConfirmSos(Guid id)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        {
+            return Unauthorized("User not found in token.");
+        }
+
+        var sos = await _context.SosRequests.FindAsync(id);
+        if (sos == null) return NotFound("SOS not found");
+        if (sos.Status != "Pending") return BadRequest("SOS is no longer pending");
+        if (sos.UserId == userId) return BadRequest("Cannot confirm your own SOS");
+
+        sos.Status = "Accepted";
+        await _context.SaveChangesAsync();
+        
+        return Ok(new { Message = "Confirmed successfully" });
+    }
 }
 
 public class CreateSosDto

@@ -63,4 +63,40 @@ class SosService {
     }
     return [];
   }
+
+  Future<List<dynamic>> getActiveSos() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) return [];
+      
+      final response = await _dio.get(
+        '/Sos/active',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      if (response.statusCode == 200) {
+        return response.data as List<dynamic>;
+      }
+    } catch (e) {
+      print('Error getting active SOS: $e');
+    }
+    return [];
+  }
+
+  Future<bool> confirmSos(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) return false;
+
+      final response = await _dio.post(
+        '/Sos/$id/confirm',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error confirming SOS: $e');
+      return false;
+    }
+  }
 }
