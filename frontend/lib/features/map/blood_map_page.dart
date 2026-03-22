@@ -39,7 +39,7 @@ class _BloodMapPageState extends State<BloodMapPage> {
   final List<Map<String, dynamic>> _hospitalPoints = [
     {
       "id": "h1", "lat": 21.0298, "lng": 105.8082,
-      "type": "HOSPITAL", "name": "Bệnh viện Chợ Rẫy (Demo)",
+      "type": "HOSPITAL", "name": "Bệnh viện Chợ Rẫy",
       "address": "201B Nguyễn Chí Thanh, Q5", "status": "Đang mở cửa"
     },
     {

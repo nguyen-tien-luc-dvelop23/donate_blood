@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blood/core/theme/app_theme.dart';
 import 'package:flutter_blood/features/splash/splash_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
-  runApp(const GiveNowApp());
+  initializeDateFormatting('vi', null).then((_) => runApp(const GiveNowApp()));
 }
 
 class GiveNowApp extends StatelessWidget {
