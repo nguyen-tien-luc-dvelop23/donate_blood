@@ -220,11 +220,23 @@ class _HomePageState extends State<_HomePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(40),
-                  child: Image.network(
-                    'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80',
+                  child: Image.asset(
+                    'assets/images/banner.png',
                     height: 200,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 200,
+                      width: double.infinity,
+                      decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(40)),
+                      child: const Center(
+                        child: Text(
+                          'Chưa có ảnh banner\n(Bạn hãy thả ảnh vào thư mục\nfrontend/assets/images/banner.png)', 
+                          textAlign: TextAlign.center, 
+                          style: TextStyle(color: Colors.white)
+                        )
+                      ),
+                    ),
                   ),
                 ),
               ),
