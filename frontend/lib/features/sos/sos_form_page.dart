@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api/sos_service.dart';
 import 'sos_success_dialog.dart';
+import 'widgets/sos_guide_bottom_sheet.dart';
 
 class SOSFormPage extends StatefulWidget {
   const SOSFormPage({super.key});
@@ -49,7 +50,14 @@ class _SOSFormPageState extends State<SOSFormPage> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.help_outline, color: Colors.white),
-                    onPressed: () {},
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const SosGuideBottomSheet(),
+                      );
+                    },
                   ),
                 ],
               ),
