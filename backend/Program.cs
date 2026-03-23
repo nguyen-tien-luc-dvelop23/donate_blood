@@ -175,10 +175,19 @@ _ = Task.Run(async () => {
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 ");
 
-                // Add RecipientId if upgrading from old schema
+                // Add RecipientId to ChatMessages if it doesn't exist yet (MySQL-safe approach)
                 try {
-                    context.Database.ExecuteSqlRaw("ALTER TABLE `ChatMessages` ADD COLUMN IF NOT EXISTS `RecipientId` char(36) NULL;");
-                } catch { }
+                    var colExists = context.Database
+                        .SqlQueryRaw<int>(
+                            "SELECT COUNT(*) AS `Value` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ChatMessages' AND COLUMN_NAME = 'RecipientId'")
+                        .FirstOrDefault();
+                    if (colExists == 0) {
+                        context.Database.ExecuteSqlRaw("ALTER TABLE `ChatMessages` ADD COLUMN `RecipientId` char(36) NULL;");
+                        Console.WriteLine("Added RecipientId column to ChatMessages");
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine($"RecipientId migration note: {ex.Message}");
+                }
 
                 context.Database.ExecuteSqlRaw(@"
                     CREATE TABLE IF NOT EXISTS `Notifications` (
