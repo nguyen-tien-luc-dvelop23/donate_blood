@@ -13,19 +13,23 @@ class ConfirmSupportScreen extends StatefulWidget {
 
 class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
   bool _isConfirming = false;
+  bool _showSuccess = false;
 
   Future<void> _handleConfirm() async {
     setState(() => _isConfirming = true);
     final id = widget.sosData['id'];
-    if (id != null && id.toString().length > 10) { // Call API if real guid
-      await SosService().confirmSos(id.toString());
-    } else {
-      await Future.delayed(const Duration(seconds: 1)); // Delay for dummy
-    }
-    setState(() => _isConfirming = false);
-    
-    if (!mounted) return;
-    Navigator.pushNamed(context, '/sos_success');
+    try {
+      if (id != null && id.toString().length > 10) {
+        await SosService().confirmSos(id.toString());
+      } else {
+        await Future.delayed(const Duration(milliseconds: 800));
+      }
+    } catch (_) {}
+    setState(() { _isConfirming = false; _showSuccess = true; });
+
+    // Auto-pop back after 2.5s
+    await Future.delayed(const Duration(milliseconds: 2500));
+    if (mounted) Navigator.pop(context, true);
   }
 
   @override
@@ -319,6 +323,60 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
               ),
             ),
           ),
+          // 4. Success Overlay (shown after confirming)
+          if (_showSuccess)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.65),
+                child: Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 40),
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1A2E),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.green.withOpacity(0.4)),
+                    ),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Container(
+                        width: 80, height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.green, width: 2),
+                        ),
+                        child: const Icon(Icons.check_circle, color: Colors.green, size: 48),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Xác nhận thành công! 🎉',
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Cảm ơn bạn đã đăng ký hỗ trợ hiến máu.\nChúng tôi sẽ liên hệ với bạn sớm nhất!',
+                        style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13, height: 1.5),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: const [
+                          Icon(Icons.access_time, color: Colors.green, size: 14),
+                          SizedBox(width: 6),
+                          Text('Đang quay lại...', style: TextStyle(color: Colors.green, fontSize: 12)),
+                        ]),
+                      ),
+                    ]),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

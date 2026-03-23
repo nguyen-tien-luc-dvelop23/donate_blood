@@ -89,8 +89,21 @@ class _DmChatScreenState extends State<DmChatScreen> {
       setState(() => _messages.add(res.data));
       _scrollToBottom();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gửi thất bại: $e'), backgroundColor: Colors.red));
+      if (mounted) {
+        final isConnectionError = e.toString().contains('connection') || e.toString().contains('XMLHttpRequest');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isConnectionError
+            ? '🔄 Máy chủ đang khởi động lại, vui lòng thử lại sau 30 giây'
+            : 'Gửi thất bại: $e'),
+          backgroundColor: isConnectionError ? Colors.orange : Colors.red,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Thử lại',
+            textColor: Colors.white,
+            onPressed: _sendMessage,
+          ),
+        ));
+      }
     }
     setState(() => _isSending = false);
   }
