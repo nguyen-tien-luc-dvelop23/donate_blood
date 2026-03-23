@@ -162,6 +162,17 @@ _ = Task.Run(async () => {
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 ");
 
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS `ChatMessages` (
+                        `Id` char(36) NOT NULL,
+                        `SenderId` char(36) NOT NULL,
+                        `Content` longtext NOT NULL,
+                        `CreatedAt` datetime(6) NOT NULL,
+                        PRIMARY KEY (`Id`),
+                        CONSTRAINT `FK_ChatMessages_Users_SenderId` FOREIGN KEY (`SenderId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ");
+
                 // Seed admin if not exists
                 if (!context.Users.Any(u => u.PhoneNumber == "admin"))
                 {

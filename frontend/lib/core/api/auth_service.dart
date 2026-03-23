@@ -31,6 +31,7 @@ class AuthService {
         await prefs.setString('avatarUrl', avatarUrl);
         await prefs.setDouble('bloodVolume', bloodVolume);
         await prefs.setInt('donationCount', donationCount);
+        await prefs.setString('userId', data['user']['id'] ?? '');
         
         return data;
       }

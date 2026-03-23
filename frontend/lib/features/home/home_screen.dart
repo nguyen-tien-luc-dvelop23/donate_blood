@@ -9,6 +9,7 @@ import '../../core/api/sos_service.dart';
 import '../history/history_page.dart';
 import '../honor/honor_screen.dart';
 import '../sos/confirm_support_screen.dart';
+import '../chat/chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -381,19 +382,27 @@ class _HomePageState extends State<_HomePage> {
                     Expanded(
                       child: _buildBigSquareCard(
                         icon: Icons.map_rounded,
-                        label: 'Bản đồ hiến máu',
-                        onTap: () {
-                          // Navigate or handle via bottom bar
-                        },
+                        label: 'Bản đồ',
+                        onTap: () {},
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: _buildBigSquareCard(
                         icon: Icons.emoji_events,
                         label: 'Vinh danh',
                         onTap: () {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const HonorScreen()));
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildBigSquareCard(
+                        icon: Icons.chat_bubble_outline,
+                        label: 'Trò chuyện',
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
                         },
                       ),
                     ),
