@@ -99,7 +99,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> UploadAvatar(IFormFile file)
     {
         if (file == null || file.Length == 0) return BadRequest("No file uploaded.");
-        if (file.Length > 5 * 1024 * 1024) return BadRequest("File size cannot exceed 5MB.");
+        if (file.Length > 20 * 1024 * 1024) return BadRequest("File size cannot exceed 20MB.");
         
         var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
