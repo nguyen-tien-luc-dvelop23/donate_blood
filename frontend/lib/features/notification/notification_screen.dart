@@ -39,13 +39,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   String _timeAgo(String? dateStr) {
-    if (dateStr == null) return '';
+    if (dateStr == null || dateStr.isEmpty) return '';
+    if (!dateStr.endsWith('Z')) dateStr += 'Z';
     final dt = DateTime.tryParse(dateStr)?.toLocal();
     if (dt == null) return '';
     final diff = DateTime.now().difference(dt);
     if (diff.inMinutes < 1) return 'Vừa xong';
     if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
     if (diff.inHours < 24) return '${diff.inHours} giờ trước';
+    if (diff.inDays < 7) return '${diff.inDays} ngày trước';
     return DateFormat('dd/MM HH:mm').format(dt);
   }
 

@@ -74,7 +74,8 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
   }
 
   String _timeAgo(String? dateStr) {
-    if (dateStr == null) return '';
+    if (dateStr == null || dateStr.isEmpty) return '';
+    if (!dateStr.endsWith('Z')) dateStr += 'Z';
     final dt = DateTime.tryParse(dateStr)?.toLocal();
     if (dt == null) return '';
     final diff = DateTime.now().difference(dt);

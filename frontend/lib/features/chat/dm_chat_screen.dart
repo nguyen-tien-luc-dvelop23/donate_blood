@@ -118,7 +118,8 @@ class _DmChatScreenState extends State<DmChatScreen> {
   }
 
   String _timeLabel(String? dateStr) {
-    if (dateStr == null) return '';
+    if (dateStr == null || dateStr.isEmpty) return '';
+    if (!dateStr.endsWith('Z')) dateStr += 'Z';
     final dt = DateTime.tryParse(dateStr)?.toLocal();
     if (dt == null) return '';
     final now = DateTime.now();
