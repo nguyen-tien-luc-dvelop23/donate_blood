@@ -36,8 +36,8 @@ string connectionString;
 
 if (!string.IsNullOrEmpty(mysqlHost))
 {
-    // Use SslMode=None for Railway proxy as it is often more stable. 300s extreme timeout.
-    connectionString = $"Server={mysqlHost};Port={mysqlPort ?? "3306"};Database={mysqlDb ?? "railway"};Uid={mysqlUser};Pwd={mysqlPass};SslMode=None;Connect Timeout=300;Default Command Timeout=300;AllowUserVariables=True;Pooling=False;";
+    // Added AllowPublicKeyRetrieval=True for MySQL 8+ compatibility through proxies.
+    connectionString = $"Server={mysqlHost};Port={mysqlPort ?? "3306"};Database={mysqlDb ?? "railway"};Uid={mysqlUser};Pwd={mysqlPass};SslMode=None;Connect Timeout=300;Default Command Timeout=300;AllowUserVariables=True;Pooling=False;AllowPublicKeyRetrieval=True;";
     Console.WriteLine($"DB CONFIG: Attempting connection via MYSQLHOST [Host]: {mysqlHost}, [Port]: {mysqlPort ?? "3306"}");
 }
 else if (!string.IsNullOrEmpty(databaseUrl))
@@ -46,7 +46,7 @@ else if (!string.IsNullOrEmpty(databaseUrl))
     var userInfo = uri.UserInfo.Split(':');
     var port = uri.Port == -1 ? 3306 : uri.Port;
     var database = uri.AbsolutePath.TrimStart('/');
-    connectionString = $"Server={uri.Host};Port={port};Database={database};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=None;Connect Timeout=300;Default Command Timeout=300;AllowUserVariables=True;Pooling=False;";
+    connectionString = $"Server={uri.Host};Port={port};Database={database};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=None;Connect Timeout=300;Default Command Timeout=300;AllowUserVariables=True;Pooling=False;AllowPublicKeyRetrieval=True;";
     Console.WriteLine($"DB CONFIG: Attempting connection via DATABASE_URL [Host]: {uri.Host}, [Port]: {port}");
 }
 else
@@ -58,7 +58,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)), mySqlOptions => 
     {
-        mySqlOptions.CommandTimeout(300); // Extreme command timeout
+        mySqlOptions.CommandTimeout(300);
+        // Enable transient error resiliency for cloud environments
+        mySqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 10,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
     });
 });
 
