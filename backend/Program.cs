@@ -26,15 +26,29 @@ builder.Services.AddCors(options =>
 
 // Configure MySQL Database
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+var mysqlHost = Environment.GetEnvironmentVariable("MYSQLHOST");
+var mysqlPort = Environment.GetEnvironmentVariable("MYSQLPORT");
+var mysqlUser = Environment.GetEnvironmentVariable("MYSQLUSER");
+var mysqlPass = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+var mysqlDb = Environment.GetEnvironmentVariable("MYSQLDATABASE");
+
 string connectionString;
 
-if (!string.IsNullOrEmpty(databaseUrl))
+if (!string.IsNullOrEmpty(mysqlHost))
+{
+    // Use individual environment variables if present (linked services or manually set)
+    connectionString = $"Server={mysqlHost};Port={mysqlPort ?? "3306"};Database={mysqlDb ?? "railway"};Uid={mysqlUser};Pwd={mysqlPass};SslMode=Preferred;Connect Timeout=120;Default Command Timeout=120;AllowUserVariables=True;Pooling=False;";
+    Console.WriteLine($"DB CONFIG: Using individual env vars. [Host]: {mysqlHost}, [Port]: {mysqlPort ?? "3306"}, [DB]: {mysqlDb ?? "railway"}");
+}
+else if (!string.IsNullOrEmpty(databaseUrl))
 {
     // Convert mysql:// URI to ADO.NET connection string
     var uri = new Uri(databaseUrl);
     var userInfo = uri.UserInfo.Split(':');
-    // Extreme Timeouts and Disabled Pooling for maximal stability on cloud proxies
-    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=Preferred;Connect Timeout=120;Default Command Timeout=120;AllowUserVariables=True;Pooling=False;";
+    var port = uri.Port == -1 ? 3306 : uri.Port;
+    var database = uri.AbsolutePath.TrimStart('/');
+    connectionString = $"Server={uri.Host};Port={port};Database={database};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=Preferred;Connect Timeout=120;Default Command Timeout=120;AllowUserVariables=True;Pooling=False;";
+    Console.WriteLine($"DB CONFIG: Using DATABASE_URL. [Host]: {uri.Host}, [Port]: {port}, [DB]: {database}");
 }
 else
 {
