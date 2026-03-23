@@ -21,7 +21,6 @@ public class LeaderboardController : ControllerBase
     public async Task<IActionResult> GetLeaderboard([FromQuery] int limit = 50)
     {
         var users = await _context.Users
-            .Where(u => u.PhoneNumber != "admin")
             .OrderByDescending(u => u.BloodVolume)
             .Take(limit)
             .Select(u => new {
@@ -35,8 +34,8 @@ public class LeaderboardController : ControllerBase
             })
             .ToListAsync();
 
-        var totalVolume = await _context.Users.Where(u => u.PhoneNumber != "admin").SumAsync(u => u.BloodVolume);
-        var totalMembers = await _context.Users.CountAsync(u => u.PhoneNumber != "admin");
+        var totalVolume = await _context.Users.SumAsync(u => u.BloodVolume);
+        var totalMembers = await _context.Users.CountAsync();
 
         return Ok(new {
             users,

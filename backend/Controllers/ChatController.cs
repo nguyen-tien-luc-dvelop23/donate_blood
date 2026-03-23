@@ -27,7 +27,7 @@ public class ChatController : ControllerBase
         Guid.TryParse(userIdStr, out var myId);
 
         var users = await _context.Users
-            .Where(u => u.Id != myId && u.PhoneNumber != "admin")
+            .Where(u => u.Id != myId)
             .Select(u => new {
                 id = u.Id,
                 fullName = u.FullName,
