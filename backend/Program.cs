@@ -173,6 +173,20 @@ _ = Task.Run(async () => {
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 ");
 
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS `Notifications` (
+                        `Id` char(36) NOT NULL,
+                        `UserId` char(36) NOT NULL,
+                        `Title` varchar(255) NOT NULL,
+                        `Body` longtext NOT NULL,
+                        `Type` varchar(50) NOT NULL DEFAULT 'info',
+                        `IsRead` tinyint(1) NOT NULL DEFAULT 0,
+                        `CreatedAt` datetime(6) NOT NULL,
+                        PRIMARY KEY (`Id`),
+                        CONSTRAINT `FK_Notifications_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ");
+
                 // Seed admin if not exists
                 if (!context.Users.Any(u => u.PhoneNumber == "admin"))
                 {

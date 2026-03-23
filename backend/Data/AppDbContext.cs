@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<SosRequest> SosRequests { get; set; }
     public DbSet<DonationRecord> DonationRecords { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

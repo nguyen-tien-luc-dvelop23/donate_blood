@@ -40,6 +40,24 @@ public class SosController : ControllerBase
         };
 
         _context.SosRequests.Add(sosRequest);
+
+        // Notify all other users about new SOS
+        var allUserIds = await _context.Users
+            .Where(u => u.Id != userId && u.PhoneNumber != "admin")
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        foreach (var targetId in allUserIds)
+        {
+            _context.Notifications.Add(new Notification
+            {
+                UserId = targetId,
+                Title = $"🆘 SOS khẩn cấp - Nhóm {request.BloodType}",
+                Body = $"Cần máu gấp tại {request.Location}. Lý do: {request.Reason}",
+                Type = "sos"
+            });
+        }
+
         await _context.SaveChangesAsync();
 
         return Ok(new { Message = "SOS request created successfully", Id = sosRequest.Id });

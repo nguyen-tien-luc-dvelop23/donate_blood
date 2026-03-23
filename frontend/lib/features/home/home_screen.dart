@@ -10,6 +10,8 @@ import '../history/history_page.dart';
 import '../honor/honor_screen.dart';
 import '../sos/confirm_support_screen.dart';
 import '../chat/chat_screen.dart';
+import '../notification/notification_screen.dart';
+import '../../core/api/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -108,16 +110,24 @@ class _HomePageState extends State<_HomePage> {
   String? _fullName;
   String? _phone;
   final _authService = AuthService();
+  int _unreadCount = 0;
   
   List<dynamic> _activeSosList = [];
   bool _isLoadingSos = true;
   final _sosService = SosService();
+  final _notifService = NotificationService();
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
     _loadActiveSos();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final data = await _notifService.getNotifications();
+    if (mounted) setState(() => _unreadCount = (data['unreadCount'] as int? ?? 0));
   }
 
   Future<void> _loadActiveSos() async {
@@ -215,7 +225,30 @@ class _HomePageState extends State<_HomePage> {
                         ],
                       ),
                     ),
-                    Icon(Icons.notifications_none, color: textTitleCol, size: 28),
+                    GestureDetector(
+                      onTap: () async {
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen()));
+                        _loadUnreadCount(); // refresh after returning
+                      },
+                      child: Stack(
+                        children: [
+                          Icon(Icons.notifications_none, color: textTitleCol, size: 28),
+                          if (_unreadCount > 0) Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              width: 16, height: 16,
+                              decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                              alignment: Alignment.center,
+                              child: Text(
+                                _unreadCount > 9 ? '9+' : '$_unreadCount',
+                                style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
