@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'dart:async';
 import '../../core/api/sos_service.dart';
 import 'sos_success_dialog.dart';
 import 'sos_guide_page.dart';
@@ -18,11 +20,32 @@ class _SOSFormPageState extends State<SOSFormPage> {
   final List<String> _reasons = ["Cấp cứu", "Phẫu thuật", "Tai nạn", "Thiếu máu", "Khác"];
   final _sosService = SosService();
   bool _isLoading = false;
+  Timer? _clockTimer;
+
+  String _formatCurrentTime() {
+    final now = DateTime.now();
+    final timeStr = DateFormat('HH:mm').format(now);
+    final today = DateTime.now();
+    final yesterday = today.subtract(const Duration(days: 1));
+    if (now.day == today.day && now.month == today.month) return '$timeStr - Hôm nay';
+    if (now.day == yesterday.day) return '$timeStr - Hôm qua';
+    return '$timeStr - ${DateFormat('dd/MM/yyyy').format(now)}';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Update clock every minute
+    _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
     _locationController.dispose();
     _descriptionController.dispose();
+    _clockTimer?.cancel();
     super.dispose();
   }
 
@@ -212,7 +235,7 @@ class _SOSFormPageState extends State<SOSFormPage> {
               Text("Thời gian tạo:", style: TextStyle(color: textTitleCol.withOpacity(0.5), fontSize: 13)),
             ],
           ),
-          Text("10:45 - Hôm nay", style: TextStyle(color: textTitleCol, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(_formatCurrentTime(), style: TextStyle(color: textTitleCol, fontSize: 13, fontWeight: FontWeight.bold)),
         ],
       ),
     );

@@ -416,7 +416,9 @@ class _HomePageState extends State<_HomePage> {
                       child: _buildBigSquareCard(
                         icon: Icons.map_rounded,
                         label: 'Bản đồ',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const BloodMapPage()));
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),
