@@ -33,8 +33,8 @@ if (!string.IsNullOrEmpty(databaseUrl))
     // Convert mysql:// URI to ADO.NET connection string
     var uri = new Uri(databaseUrl);
     var userInfo = uri.UserInfo.Split(':');
-    // Added Connect Timeout, Default Command Timeout, and AllowUserVariables for stability on cloud proxies (e.g. Railway/Render)
-    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=Preferred;Connect Timeout=60;Default Command Timeout=60;AllowUserVariables=True;";
+    // Extreme Timeouts and Disabled Pooling for maximal stability on cloud proxies
+    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=Preferred;Connect Timeout=120;Default Command Timeout=120;AllowUserVariables=True;Pooling=False;";
 }
 else
 {
@@ -45,7 +45,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)), mySqlOptions => 
     {
-        mySqlOptions.CommandTimeout(60); // Increase command timeout for migrations/startup
+        mySqlOptions.CommandTimeout(120); // Increase command timeout for migrations/startup
     });
 });
 
@@ -89,78 +89,92 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Create tables and Seed Admin User
+// Create tables and Seed Admin User with Robust Retries
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // Drop existing tables to ensure a clean schema creation (Dev mode only)
-    if (app.Environment.IsDevelopment())
+    int maxRetries = 5;
+    int retryDelayMs = 10000;
+
+    for (int i = 1; i <= maxRetries; i++)
     {
-        try {
-            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `DonationRecords`;");
-            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `SosRequests`;");
-            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `Users`;");
-        } catch { }
-    }
-
-    context.Database.ExecuteSqlRaw(@"
-        CREATE TABLE IF NOT EXISTS `Users` (
-            `Id` char(36) NOT NULL,
-            `PhoneNumber` varchar(20) NOT NULL,
-            `PasswordHash` longtext NOT NULL,
-            `FullName` varchar(100) NOT NULL DEFAULT '',
-            `BloodType` varchar(10) NOT NULL,
-            `MedicalInfo` longtext NOT NULL,
-            `BloodVolume` double NOT NULL DEFAULT 0.0,
-            `AvatarUrl` varchar(500) NOT NULL DEFAULT '',
-            `CreatedAt` datetime(6) NOT NULL,
-            PRIMARY KEY (`Id`),
-            UNIQUE KEY `IX_Users_PhoneNumber` (`PhoneNumber`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ");
-
-    // Create SosRequests table explicitly using raw SQL
-    context.Database.ExecuteSqlRaw(@"
-        CREATE TABLE IF NOT EXISTS `SosRequests` (
-            `Id` char(36) NOT NULL,
-            `UserId` char(36) NOT NULL,
-            `BloodType` varchar(10) NOT NULL,
-            `Location` varchar(255) NOT NULL,
-            `Reason` varchar(100) NOT NULL,
-            `Description` longtext NOT NULL,
-            `Status` varchar(20) NOT NULL,
-            `CreatedAt` datetime(6) NOT NULL,
-            PRIMARY KEY (`Id`),
-            CONSTRAINT `FK_SosRequests_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ");
-
-    // Removed unsafe ALTER TABLE statements here to prevent Pomelo MySQL native driver segfaults (Exit Code 139) on Linux
-
-    // Create DonationRecords table explicitly
-    context.Database.ExecuteSqlRaw(@"
-        CREATE TABLE IF NOT EXISTS `DonationRecords` (
-            `Id` char(36) NOT NULL,
-            `UserId` char(36) NOT NULL,
-            `HospitalName` varchar(255) NOT NULL,
-            `DonationDate` datetime(6) NOT NULL,
-            `CreatedAt` datetime(6) NOT NULL,
-            PRIMARY KEY (`Id`),
-            CONSTRAINT `FK_DonationRecords_Users` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ");
-
-    // Seed admin if not exists
-    if (!context.Users.Any(u => u.PhoneNumber == "admin"))
-    {
-        context.Users.Add(new User
+        try
         {
-            PhoneNumber = "admin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
-            BloodType = "Admin"
-        });
-        context.SaveChanges();
+            Console.WriteLine($"DB Initialization Attempt {i} of {maxRetries}...");
+            context.Database.SetCommandTimeout(120);
+
+            // Create tables if not exists
+            context.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS `Users` (
+                    `Id` char(36) NOT NULL,
+                    `PhoneNumber` varchar(20) NOT NULL,
+                    `PasswordHash` longtext NOT NULL,
+                    `FullName` varchar(100) NOT NULL DEFAULT '',
+                    `BloodType` varchar(10) NOT NULL,
+                    `MedicalInfo` longtext NOT NULL,
+                    `BloodVolume` double NOT NULL DEFAULT 0.0,
+                    `AvatarUrl` varchar(500) NOT NULL DEFAULT '',
+                    `CreatedAt` datetime(6) NOT NULL,
+                    PRIMARY KEY (`Id`),
+                    UNIQUE KEY `IX_Users_PhoneNumber` (`PhoneNumber`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            context.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS `SosRequests` (
+                    `Id` char(36) NOT NULL,
+                    `UserId` char(36) NOT NULL,
+                    `BloodType` varchar(10) NOT NULL,
+                    `Location` varchar(255) NOT NULL,
+                    `Reason` varchar(100) NOT NULL,
+                    `Description` longtext NOT NULL,
+                    `Status` varchar(20) NOT NULL,
+                    `CreatedAt` datetime(6) NOT NULL,
+                    PRIMARY KEY (`Id`),
+                    CONSTRAINT `FK_SosRequests_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            context.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS `DonationRecords` (
+                    `Id` char(36) NOT NULL,
+                    `UserId` char(36) NOT NULL,
+                    `HospitalName` varchar(255) NOT NULL,
+                    `DonationDate` datetime(6) NOT NULL,
+                    `CreatedAt` datetime(6) NOT NULL,
+                    PRIMARY KEY (`Id`),
+                    CONSTRAINT `FK_DonationRecords_Users` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            // Seed admin if not exists
+            if (!context.Users.Any(u => u.PhoneNumber == "admin"))
+            {
+                context.Users.Add(new User
+                {
+                    PhoneNumber = "admin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    BloodType = "Admin"
+                });
+                context.SaveChanges();
+            }
+
+            Console.WriteLine("DB Initialization Successful.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DB Initialization failed (Attempt {i}): {ex.Message}");
+            if (i < maxRetries)
+            {
+                Console.WriteLine($"Waiting {retryDelayMs/1000}s before next retry...");
+                Thread.Sleep(retryDelayMs);
+            }
+            else
+            {
+                Console.WriteLine("DB Initialization failed after all attempts. Service may be unstable.");
+            }
+        }
     }
 }
 
