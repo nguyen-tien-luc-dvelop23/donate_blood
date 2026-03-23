@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/api/sos_service.dart';
 
-// Helper extension để tránh deprecated withOpacity
 extension _ColorExt on Color {
   Color op(double opacity) => withOpacity(opacity);
 }
@@ -16,71 +16,104 @@ class _SOSPageState extends State<SOSPage> {
   static const sosRed = Color(0xFFB71C1C);
   static const ctaOrange = Color(0xFFFF6A00);
 
-  int selectedFilterIndex = 0;
-  final List<String> filters = ["Tất cả", "Gần tôi", "Nhóm O", "Nhóm A"];
+  final _sosService = SosService();
+  List<dynamic> _sosList = [];
+  bool _isLoading = true;
+  String _selectedFilter = 'Tất cả';
+  final List<String> _filters = ['Tất cả', 'Nhóm A', 'Nhóm B', 'Nhóm O', 'Nhóm AB'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSos();
+  }
+
+  Future<void> _loadSos() async {
+    setState(() => _isLoading = true);
+    final list = await _sosService.getActiveSos();
+    setState(() {
+      _sosList = list;
+      _isLoading = false;
+    });
+  }
+
+  List<dynamic> get _filtered {
+    if (_selectedFilter == 'Tất cả') return _sosList;
+    final prefix = _selectedFilter.replaceAll('Nhóm ', '');
+    return _sosList.where((s) => (s['bloodType'] as String? ?? '').startsWith(prefix)).toList();
+  }
+
+  String _timeAgo(String? dateStr) {
+    if (dateStr == null) return '';
+    final dt = DateTime.tryParse(dateStr);
+    if (dt == null) return '';
+    final diff = DateTime.now().difference(dt.toLocal());
+    if (diff.inMinutes < 1) return 'Vừa xong';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
+    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
+    return '${diff.inDays} ngày trước';
+  }
+
+  Future<void> _confirmHelp(dynamic sos) async {
+    final ok = await _sosService.confirmSos(sos['id']);
+    if (!mounted) return;
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Đã xác nhận hỗ trợ! Cảm ơn bạn.'), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating),
+      );
+      _loadSos();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể xác nhận - có thể bạn là người tạo SOS này'), behavior: SnackBarBehavior.floating),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final textCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(context),
-            _buildFilters(context),
+            _buildAppBar(context, textCol),
+            _buildFilters(context, textCol),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                children: [
-                  _buildSOSCard(
-                    context: context,
-                    blood: "O+",
-                    hospital: "Bệnh viện Bạch Mai",
-                    note: "Cần gấp 2 đơn vị • Tai nạn",
-                    timeAgo: "5 phút trước",
-                    distance: "1.2km từ vị trí của bạn",
-                    imagePath: 'assets/images/bach_mai.png',
-                    isActive: true,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSOSCard(
-                    context: context,
-                    blood: "AB-",
-                    hospital: "Bệnh viện Việt Đức",
-                    note: "Cần tiểu cầu • Phẫu thuật",
-                    timeAgo: "15 phút trước",
-                    distance: "3.5km từ vị trí của bạn",
-                    imagePath: null,
-                    mapColors: [const Color(0xFF4CAF82), const Color(0xFF5B9BD5)],
-                    isActive: true,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSOSCard(
-                    context: context,
-                    blood: "A+",
-                    hospital: "Bệnh viện K",
-                    note: "Thiếu máu nhóm hiếm",
-                    timeAgo: "30 phút trước",
-                    distance: "5km từ vị trí của bạn",
-                    imagePath: null,
-                    mapColors: [const Color(0xFF8B0000), const Color(0xFF3E2723)],
-                    isActive: true,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSOSCard(
-                    context: context,
-                    blood: "B+",
-                    hospital: "Bệnh viện 108",
-                    note: "Đã đủ số lượng",
-                    timeAgo: "4 giờ trước",
-                    distance: "8km từ vị trí của bạn",
-                    imagePath: null,
-                    mapColors: [Colors.grey.shade700, Colors.grey.shade800],
-                    isActive: false,
-                  ),
-                  const SizedBox(height: 30),
-                ],
-              ),
+              child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: ctaOrange))
+                : _filtered.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_circle_outline, size: 60, color: Colors.green.op(0.7)),
+                          const SizedBox(height: 12),
+                          Text('Không có SOS đang chờ', style: TextStyle(color: textCol.op(0.5), fontSize: 15)),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: _loadSos,
+                            icon: const Icon(Icons.refresh, color: ctaOrange),
+                            label: const Text('Tải lại', style: TextStyle(color: ctaOrange)),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadSos,
+                      color: ctaOrange,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: _filtered.length,
+                        itemBuilder: (ctx, i) {
+                          final s = _filtered[i];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _buildSOSCard(context, s, textCol),
+                          );
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -88,420 +121,155 @@ class _SOSPageState extends State<SOSPage> {
     );
   }
 
-  // ================= APP BAR =================
-  Widget _buildAppBar(BuildContext context) {
-    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+  Widget _buildAppBar(BuildContext context, Color textCol) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+    child: Row(
+      children: [
+        GestureDetector(onTap: () => Navigator.pop(context), child: Icon(Icons.arrow_back, color: textCol, size: 24)),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('SOS Khẩn cấp', style: TextStyle(color: textCol, fontSize: 22, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Row(children: [
+            Container(width: 6, height: 6, decoration: const BoxDecoration(color: ctaOrange, shape: BoxShape.circle)),
+            const SizedBox(width: 6),
+            Text('${_sosList.length} yêu cầu đang chờ', style: const TextStyle(color: ctaOrange, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+          ]),
+        ])),
+        IconButton(icon: Icon(Icons.refresh, color: textCol.op(0.7)), onPressed: _loadSos),
+      ],
+    ),
+  );
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-             onTap: () => Navigator.pop(context),
-             child: Icon(Icons.arrow_back, color: textTitleCol, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "SOS Khẩn cấp",
-                  style: TextStyle(
-                    color: textTitleCol,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: ctaOrange,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      "REAL-TIME UPDATE",
-                      style: TextStyle(
-                        color: ctaOrange,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(8),
+  Widget _buildFilters(BuildContext context, Color textCol) => SizedBox(
+    height: 40,
+    child: ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      scrollDirection: Axis.horizontal,
+      itemCount: _filters.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 8),
+      itemBuilder: (ctx, i) {
+        final selected = _filters[i] == _selectedFilter;
+        return GestureDetector(
+          onTap: () => setState(() => _selectedFilter = _filters[i]),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: textTitleCol.op(0.06),
-              shape: BoxShape.circle,
+              color: selected ? ctaOrange : Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: selected ? Colors.transparent : textCol.op(0.1)),
             ),
-            child: Icon(Icons.search, color: textTitleCol.op(0.7), size: 20),
-          )
-        ],
-      ),
-    );
-  }
+            alignment: Alignment.center,
+            child: Text(_filters[i], style: TextStyle(
+              color: selected ? Colors.white : textCol.op(0.7),
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              fontSize: 13,
+            )),
+          ),
+        );
+      },
+    ),
+  );
 
-  // ================= FILTERS =================
-  Widget _buildFilters(BuildContext context) {
-    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-    var cardCol = Theme.of(context).cardColor;
+  Widget _buildSOSCard(BuildContext context, dynamic s, Color textCol) {
+    final cardCol = Theme.of(context).cardColor;
+    final blood = s['bloodType'] ?? '?';
+    final location = s['location'] ?? '';
+    final reason = s['reason'] ?? '';
+    final timeAgo = _timeAgo(s['createdAt']);
+    final desc = s['description'] ?? '';
+    final isAccepted = s['status'] != 'Pending';
 
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemCount: filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final isSelected = index == selectedFilterIndex;
-          final isLocation = index == 1;
-
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedFilterIndex = index;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: isSelected ? ctaOrange : cardCol,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: isSelected ? Colors.transparent : textTitleCol.op(0.1),
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Row(
-                children: [
-                  if (isLocation) ...[
-                    Icon(
-                      Icons.near_me,
-                      size: 14,
-                      color: isSelected ? Colors.white : textTitleCol.op(0.7),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  Text(
-                    filters[index],
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : textTitleCol.op(0.7),
-                      fontWeight:
-                          isSelected ? FontWeight.w800 : FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ================= SOS CARD FULL WIDTH =================
-  Widget _buildSOSCard({
-    required BuildContext context,
-    required String blood,
-    required String hospital,
-    required String note,
-    required String timeAgo,
-    required String distance,
-    String? imagePath,
-    List<Color>? mapColors,
-    required bool isActive,
-  }) {
-    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-    var cardCol = Theme.of(context).cardColor;
+    final bloodColors = {
+      'A': [const Color(0xFFB71C1C), const Color(0xFF7B0000)],
+      'B': [const Color(0xFF1A237E), const Color(0xFF0D1440)],
+      'O': [const Color(0xFF1B5E20), const Color(0xFF0A2E0F)],
+      'AB': [const Color(0xFF311B92), const Color(0xFF1A0A52)],
+    };
+    final prefix = blood.replaceAll('+', '').replaceAll('-', '');
+    final colors = bloodColors[prefix] ?? [const Color(0xFF4A0000), const Color(0xFF2A0000)];
 
     return Container(
-      width: double.infinity,
       decoration: BoxDecoration(
         color: cardCol,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: textTitleCol.op(0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.op(0.1),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: textCol.op(0.08)),
+        boxShadow: [BoxShadow(color: Colors.black.op(0.1), blurRadius: 18, offset: const Offset(0, 8))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildMapPreview(
-            blood: blood,
-            timeAgo: timeAgo,
-            imagePath: imagePath,
-            mapColors: mapColors,
-            isActive: isActive,
-            textTitleCol: textTitleCol,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Header gradient with blood type badge
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          child: Container(
+            height: 120,
+            decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: colors)),
+            child: Stack(children: [
+              // Grid overlay
+              CustomPaint(painter: _GridPainter()),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isAccepted ? Colors.grey.op(0.5) : ctaOrange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(isAccepted ? 'ĐÃ NHẬN' : 'LIVE', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11)),
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 48, height: 48,
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    alignment: Alignment.center,
+                    child: Text(blood, style: const TextStyle(color: sosRed, fontWeight: FontWeight.w900, fontSize: 14)),
+                  ),
+                ]),
+              ),
+              Positioned(left: 14, bottom: 12, child: Row(children: [
+                const Icon(Icons.access_time, size: 14, color: Colors.white70),
+                const SizedBox(width: 4),
+                Text(timeAgo, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              ])),
+            ]),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hospital,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: isActive ? textTitleCol : textTitleCol.op(0.6),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  note,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: isActive ? ctaOrange : textTitleCol.op(0.4),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.near_me,
-                        size: 14, color: textTitleCol.op(0.4)),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        distance,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: textTitleCol.op(0.4),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isActive ? ctaOrange : textTitleCol.op(0.1),
-                      foregroundColor:
-                          isActive ? Colors.white : textTitleCol.op(0.4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 0),
-                      minimumSize: const Size(double.infinity, 46),
-                    ),
-                    onPressed: isActive ? () {} : null,
-                    child: isActive
-                        ? const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Tôi có thể giúp",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w800, fontSize: 14),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(Icons.handshake, size: 18),
-                            ],
-                          )
-                        : const Text(
-                            "Đã kết thúc",
-                            style: TextStyle(
-                                fontWeight: FontWeight.w800, fontSize: 14),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMapPreview({
-    required String blood,
-    required String timeAgo,
-    String? imagePath,
-    List<Color>? mapColors,
-    required bool isActive,
-    required Color textTitleCol,
-  }) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-      child: SizedBox(
-        height: 150,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Background: Ảnh hoặc Gradient giả
-            if (imagePath != null)
-              ColorFiltered(
-                colorFilter: isActive
-                    ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
-                    : ColorFilter.mode(Colors.black.op(0.4), BlendMode.darken),
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover,
-                ),
-              )
-            else
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: mapColors ?? [Colors.grey.shade800, Colors.grey.shade900],
-                  ),
-                ),
-              ),
-
-            // Lưới bản đồ nếu là ảnh giả (gradient)
-            if (imagePath == null)
-              CustomPaint(
-                painter: _MapGridPainter(lineColor: Colors.white.op(0.1)),
-              ),
-
-            // Gradient đen phía dưới cho dễ đọc text
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    Colors.black.op(0.8),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-
-            // Icon trên cùng bên trái (LIVE / KẾT THÚC)
-            Positioned(
-              left: 12,
-              top: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isActive ? ctaOrange : Colors.white.op(0.2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  isActive ? "LIVE" : "KẾT THÚC",
-                  style: TextStyle(
-                    color: isActive ? Colors.white : Colors.white70,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-            ),
-
-            // Icon nhóm máu trên cùng bên phải
-            Positioned(
-              right: 12,
-              top: 12,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isActive ? Colors.white : Colors.black.op(0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  blood,
-                  style: TextStyle(
-                    color: isActive ? const Color(0xFFB71C1C) : Colors.white54,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-
-            // Nhãn thời gian (dưới cùng bên trái)
-            Positioned(
-              left: 12,
-              bottom: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.black.op(0.6),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white.op(0.14)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14, color: Colors.white70),
-                    const SizedBox(width: 6),
-                    Text(
-                      timeAgo,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(location, style: TextStyle(color: textCol, fontSize: 17, fontWeight: FontWeight.w800), maxLines: 1, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+            Text('$reason${desc.isNotEmpty ? ' • $desc' : ''}', style: TextStyle(color: ctaOrange, fontSize: 13, fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isAccepted ? textCol.op(0.1) : ctaOrange,
+                  foregroundColor: isAccepted ? textCol.op(0.5) : Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                  minimumSize: const Size(double.infinity, 46),
+                ),
+                onPressed: isAccepted ? null : () => _confirmHelp(s),
+                icon: Icon(isAccepted ? Icons.check : Icons.handshake, size: 18),
+                label: Text(isAccepted ? 'Đã có người hỗ trợ' : 'Tôi có thể giúp', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+              ),
+            ),
+          ]),
+        ),
+      ]),
     );
   }
 }
 
-// Giữ lại custom grid painter
-class _MapGridPainter extends CustomPainter {
-  final Color lineColor;
-  const _MapGridPainter({this.lineColor = Colors.white10});
-
+class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final thin = Paint()
-      ..color = lineColor
-      ..strokeWidth = 1.0;
-    final road = Paint()
-      ..color = lineColor
-      ..strokeWidth = 2.5;
-
-    for (double y = 22; y < size.height; y += 26) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), thin);
-    }
-    for (double x = 22; x < size.width; x += 34) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), thin);
-    }
-    canvas.drawLine(Offset(0, size.height * 0.42),
-        Offset(size.width, size.height * 0.58), road);
-    canvas.drawLine(Offset(size.width * 0.28, 0),
-        Offset(size.width * 0.46, size.height), road);
+    final paint = Paint()..color = Colors.white.withOpacity(0.08)..strokeWidth = 1;
+    for (double y = 20; y < size.height; y += 24) canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    for (double x = 20; x < size.width; x += 32) canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
   }
-
   @override
-  bool shouldRepaint(_MapGridPainter old) => false;
+  bool shouldRepaint(_) => false;
 }
