@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api/sos_service.dart';
 import 'sos_success_dialog.dart';
-import 'widgets/sos_guide_bottom_sheet.dart';
+import 'sos_guide_page.dart';
 
 class SOSFormPage extends StatefulWidget {
   const SOSFormPage({super.key});
@@ -28,8 +28,12 @@ class _SOSFormPageState extends State<SOSFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final cardCol = Theme.of(context).cardColor;
+    final bgCol = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1615),
+      backgroundColor: bgCol,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -41,21 +45,19 @@ class _SOSFormPageState extends State<SOSFormPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: textTitleCol),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  const Text(
+                  Text(
                     "Tạo SOS Mới",
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: textTitleCol, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
                     icon: const Icon(Icons.help_outline, color: Colors.white),
                     onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => const SosGuideBottomSheet(),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SOSGuidePage()),
                       );
                     },
                   ),
@@ -64,41 +66,41 @@ class _SOSFormPageState extends State<SOSFormPage> {
               const SizedBox(height: 30),
 
               // 2. Title Section
-              const Text(
+              Text(
                 "Tạo Yêu cầu SOS Khẩn cấp",
-                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(color: textTitleCol, fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 "Điền thông tin chính xác để nhận trợ giúp\nnhanh nhất từ cộng đồng.",
-                style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, height: 1.5),
+                style: TextStyle(color: textTitleCol.withOpacity(0.6), fontSize: 13, height: 1.5),
               ),
               const SizedBox(height: 24),
 
               // 3. Privacy Box
-              _buildPrivacyBox(),
+              _buildPrivacyBox(textTitleCol, cardCol),
               const SizedBox(height: 20),
 
               // 4. Time Bar
-              _buildTimeBar(),
+              _buildTimeBar(textTitleCol, cardCol),
               const SizedBox(height: 30),
 
               // 5. Blood Type Grid
-              _buildBloodGrid(),
+              _buildBloodGrid(textTitleCol, cardCol),
               const SizedBox(height: 30),
 
               // 6. Location Input
-              _buildInputLabel("Địa điểm"),
-              _buildLocationInput(),
+              _buildInputLabel("Địa điểm", textTitleCol),
+              _buildLocationInput(textTitleCol, cardCol),
               const SizedBox(height: 20),
 
               // 7. Reason Input
-              _buildInputLabel("Lý do cấp cứu", isRequired: true),
-              _buildReasonDropdown(),
+              _buildInputLabel("Lý do cấp cứu", textTitleCol, isRequired: true),
+              _buildReasonDropdown(textTitleCol, cardCol),
               const SizedBox(height: 20),
 
               // 8. Description Field
-              _buildDescriptionField(),
+              _buildDescriptionField(textTitleCol, cardCol),
               const SizedBox(height: 30),
 
               // 9. Submit Button
@@ -158,12 +160,13 @@ class _SOSFormPageState extends State<SOSFormPage> {
     );
   }
 
-  Widget _buildPrivacyBox() {
+  Widget _buildPrivacyBox(Color textTitleCol, Color cardCol) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E2530),
+        color: cardCol,
         borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: textTitleCol.withOpacity(0.1)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +184,7 @@ class _SOSFormPageState extends State<SOSFormPage> {
                 const SizedBox(height: 4),
                 Text(
                   "Hệ thống chỉ hiển thị nhóm máu và địa điểm. Vui lòng không nhập tên bệnh nhân hoặc số điện thoại vào mô tả.",
-                  style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, height: 1.4),
+                  style: TextStyle(color: textTitleCol.withOpacity(0.6), fontSize: 11, height: 1.4),
                 ),
               ],
             ),
@@ -191,30 +194,31 @@ class _SOSFormPageState extends State<SOSFormPage> {
     );
   }
 
-  Widget _buildTimeBar() {
+  Widget _buildTimeBar(Color textTitleCol, Color cardCol) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2726),
+        color: cardCol,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: textTitleCol.withOpacity(0.05)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.access_time, color: Colors.grey, size: 18),
-              SizedBox(width: 8),
-              Text("Thời gian tạo:", style: TextStyle(color: Colors.grey, fontSize: 13)),
+              Icon(Icons.access_time, color: textTitleCol.withOpacity(0.5), size: 18),
+              const SizedBox(width: 8),
+              Text("Thời gian tạo:", style: TextStyle(color: textTitleCol.withOpacity(0.5), fontSize: 13)),
             ],
           ),
-          const Text("10:45 - Hôm nay", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text("10:45 - Hôm nay", style: TextStyle(color: textTitleCol, fontSize: 13, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  Widget _buildBloodGrid() {
+  Widget _buildBloodGrid(Color textTitleCol, Color cardCol) {
     final types = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
     return GridView.builder(
       shrinkWrap: true,
@@ -234,13 +238,14 @@ class _SOSFormPageState extends State<SOSFormPage> {
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFE65100) : const Color(0xFF2D2726),
+              color: isSelected ? const Color(0xFFE65100) : cardCol,
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isSelected ? Colors.transparent : textTitleCol.withOpacity(0.1)),
             ),
             child: Text(
               type,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white60,
+                color: isSelected ? Colors.white : textTitleCol.withOpacity(0.7),
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
@@ -251,13 +256,13 @@ class _SOSFormPageState extends State<SOSFormPage> {
     );
   }
 
-  Widget _buildInputLabel(String label, {bool isRequired = false}) {
+  Widget _buildInputLabel(String label, Color textTitleCol, {bool isRequired = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: RichText(
         text: TextSpan(
           children: [
-            TextSpan(text: label, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+            TextSpan(text: label, style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.bold)),
             if (isRequired)
               const TextSpan(text: "*", style: TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.bold)),
           ],
@@ -266,54 +271,59 @@ class _SOSFormPageState extends State<SOSFormPage> {
     );
   }
 
-  Widget _buildLocationInput() {
+  Widget _buildLocationInput(Color textTitleCol, Color cardCol) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 55,
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2726),
+        color: cardCol,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: textTitleCol.withOpacity(0.1)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.location_on, color: Colors.grey, size: 20),
+          Icon(Icons.location_on, color: textTitleCol.withOpacity(0.5), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _locationController,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: const InputDecoration(
+              style: TextStyle(color: textTitleCol, fontSize: 14),
+              decoration: InputDecoration(
                 hintText: "Bệnh viện Chợ Rẫy, Quận 5",
-                hintStyle: TextStyle(color: Colors.white38),
+                hintStyle: TextStyle(color: textTitleCol.withOpacity(0.3)),
                 border: InputBorder.none,
+                filled: true,
+                fillColor: Colors.transparent,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14), // Added to align text properly
               ),
             ),
           ),
-          Icon(Icons.gps_fixed, color: Colors.white.withOpacity(0.3), size: 18),
+          Icon(Icons.gps_fixed, color: textTitleCol.withOpacity(0.3), size: 18),
         ],
       ),
     );
   }
 
-  Widget _buildReasonDropdown() {
+  Widget _buildReasonDropdown(Color textTitleCol, Color cardCol) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       height: 55,
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2726),
+        color: cardCol,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: textTitleCol.withOpacity(0.1)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.work, color: Colors.grey, size: 20),
+          Icon(Icons.work, color: textTitleCol.withOpacity(0.5), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _selectedReason,
-                dropdownColor: const Color(0xFF2D2726),
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                dropdownColor: cardCol,
+                style: TextStyle(color: textTitleCol, fontSize: 14),
+                icon: Icon(Icons.keyboard_arrow_down, color: textTitleCol.withOpacity(0.5)),
                 items: _reasons.map((String reason) {
                   return DropdownMenuItem<String>(
                     value: reason,
@@ -335,23 +345,26 @@ class _SOSFormPageState extends State<SOSFormPage> {
     );
   }
 
-  Widget _buildDescriptionField() {
+  Widget _buildDescriptionField(Color textTitleCol, Color cardCol) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
       height: 120,
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2726),
+        color: cardCol,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: textTitleCol.withOpacity(0.1)),
       ),
       child: TextField(
         controller: _descriptionController,
         maxLines: null,
-        style: const TextStyle(color: Colors.white, fontSize: 13),
-        decoration: const InputDecoration(
+        style: TextStyle(color: textTitleCol, fontSize: 13),
+        decoration: InputDecoration(
           hintText: "Mô tả thêm về tình trạng, số lượng đơn vị máu cần...",
-          hintStyle: TextStyle(color: Colors.white24),
+          hintStyle: TextStyle(color: textTitleCol.withOpacity(0.3)),
           border: InputBorder.none,
+          filled: true,
+          fillColor: Colors.transparent,
+          contentPadding: const EdgeInsets.only(top: 16), // Adjusted to align text properly inside box
         ),
       ),
     );

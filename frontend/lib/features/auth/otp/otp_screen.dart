@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import '../../../core/theme/app_colors.dart';
 import '../login/login_screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -52,13 +51,16 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final cardCol = Theme.of(context).cardColor;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios, color: textTitleCol),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -72,34 +74,37 @@ class _OtpScreenState extends State<OtpScreen> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.inputBackground,
+                  color: cardCol,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.inputBorder),
+                  border: Border.all(color: textTitleCol.withOpacity(0.1)),
                 ),
-                child: Icon(Icons.lock_outline, size: 40, color: AppColors.textPrimary),
+                child: Icon(Icons.lock_outline, size: 40, color: textTitleCol),
               ),
               const SizedBox(height: 32),
               Text(
                 'Xác thực OTP',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: TextStyle(
+                  color: textTitleCol,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Nhập mã 5 số được gửi đến',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
+                style: TextStyle(
+                  color: textTitleCol,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 _maskedPhone,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: TextStyle(
+                  color: textTitleCol,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
               const SizedBox(height: 40),
               PinCodeTextField(
@@ -111,17 +116,17 @@ class _OtpScreenState extends State<OtpScreen> {
                 animationType: AnimationType.fade,
                 pinTheme: PinTheme(
                   shape: PinCodeFieldShape.underline,
-                  activeColor: AppColors.primary,
-                  inactiveColor: AppColors.inputBorder,
-                  selectedColor: AppColors.primary,
+                  activeColor: const Color(0xFFFF6A00),
+                  inactiveColor: textTitleCol.withOpacity(0.2),
+                  selectedColor: const Color(0xFFFF6A00),
                   activeFillColor: Colors.transparent,
                   inactiveFillColor: Colors.transparent,
                   selectedFillColor: Colors.transparent,
                   fieldHeight: 48,
                   fieldWidth: 40,
                 ),
-                textStyle: const TextStyle(
-                  color: AppColors.textPrimary,
+                textStyle: TextStyle(
+                  color: textTitleCol,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
@@ -131,29 +136,31 @@ class _OtpScreenState extends State<OtpScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.inputBackground,
+                  color: cardCol,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.inputBorder),
+                  border: Border.all(color: textTitleCol.withOpacity(0.1)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.schedule, color: AppColors.textMuted, size: 20),
+                    Icon(Icons.schedule, color: textTitleCol.withOpacity(0.5), size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'Gửi lại mã sau ',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
+                      style: TextStyle(
+                        color: textTitleCol,
+                        fontSize: 14,
+                      ),
                     ),
                     Text(
                       _resendSeconds > 0
                           ? '${(_resendSeconds ~/ 60).toString().padLeft(2, '0')}:${(_resendSeconds % 60).toString().padLeft(2, '0')}'
                           : '00:00',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: const TextStyle(
+                        color: Color(0xFFFF6A00),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),

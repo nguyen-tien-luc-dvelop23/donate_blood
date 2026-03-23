@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
 import '../register/register_screen.dart';
 import '../../home/home_screen.dart';
 import '../forgot_password/forgot_password_screen.dart';
@@ -31,9 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
-
     final result = await _authService.login(phone, password);
-
     setState(() => _isLoading = false);
 
     if (result != null) {
@@ -61,8 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final textSubCol = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -76,91 +76,48 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      color: const Color(0xFFFF6A00),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'SOS',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
+                    child: const Text('SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                   ),
                   GestureDetector(
                     onTap: () {},
-                    child: Text(
-                      'Trợ giúp?',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                    ),
+                    child: Text('Trợ giúp?', style: TextStyle(color: textTitleCol, fontSize: 14)),
                   ),
                 ],
               ),
               const SizedBox(height: 48),
-              Text(
-                'AN TOÀN LÀ TRÊN HẾT',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-              ),
+              const Text('AN TOÀN LÀ TRÊN HẾT', style: TextStyle(color: Color(0xFFFF6A00), fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 12)),
               const SizedBox(height: 8),
-              Text(
-                'Đăng nhập',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
+              Text('Đăng nhập', style: TextStyle(color: textTitleCol, fontWeight: FontWeight.bold, fontSize: 28)),
               const SizedBox(height: 8),
-              Text(
-                'Chào mừng bạn quay trở lại. Hãy kết nối để giữ an toàn',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-              ),
+              Text('Chào mừng bạn quay trở lại. Hãy kết nối để giữ an toàn', style: TextStyle(color: textSubCol, fontSize: 14)),
               const SizedBox(height: 40),
-              Text(
-                'Số điện thoại',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-              ),
+              
+              Text('Số điện thoại', style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
+                style: TextStyle(color: textTitleCol),
+                decoration: const InputDecoration(
                   hintText: 'Nhập tài khoản hoặc số điện thoại',
-                  hintStyle: const TextStyle(color: AppColors.textMuted),
-                  suffixIcon: Icon(Icons.phone_outlined, color: AppColors.textMuted),
+                  suffixIcon: Icon(Icons.phone_outlined),
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                'Mật khẩu',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-              ),
+              
+              Text('Mật khẩu', style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: textTitleCol),
                 decoration: InputDecoration(
                   hintText: 'Nhập mật khẩu của bạn',
-                  hintStyle: const TextStyle(color: AppColors.textMuted),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                      color: AppColors.textMuted,
-                    ),
+                    icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
@@ -170,21 +127,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()));
                   },
-                  child: Text(
-                    'Quên mật khẩu?',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
+                  child: const Text('Quên mật khẩu?', style: TextStyle(color: Color(0xFFFF6A00), fontWeight: FontWeight.w600, fontSize: 13)),
                 ),
               ),
               const SizedBox(height: 32),
+              
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -193,36 +142,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.arrow_forward, size: 20),
                   label: Text(_isLoading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG NHẬP'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
                 ),
               ),
               const SizedBox(height: 32),
+              
               Row(
                 children: [
-                  Expanded(child: Divider(color: AppColors.textMuted)),
-                  Padding(
+                   Expanded(child: Divider(color: textTitleCol.withOpacity(0.2))),
+                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'HOẶC TIẾP TỤC VỚI',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppColors.textMuted,
-                          ),
-                    ),
+                    child: Text('HOẶC TIẾP TỤC VỚI', style: TextStyle(color: textSubCol, fontSize: 11)),
                   ),
-                  Expanded(child: Divider(color: AppColors.textMuted)),
+                  Expanded(child: Divider(color: textTitleCol.withOpacity(0.2))),
                 ],
               ),
               const SizedBox(height: 24),
+              
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildSocialButton('G'),
+                  _buildSocialButton('G', textTitleCol),
                   const SizedBox(width: 16),
-                  _buildSocialButton('iOS'),
+                  _buildSocialButton('iOS', textTitleCol),
                   const SizedBox(width: 16),
-                  _buildSocialButton('f'),
+                  _buildSocialButton('f', textTitleCol),
                 ],
               ),
               const SizedBox(height: 40),
@@ -230,26 +173,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Bạn chưa có tài khoản? ',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
+                    Text('Bạn chưa có tài khoản? ', style: TextStyle(color: textSubCol, fontSize: 14)),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                        );
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
                       },
-                      child: Text(
-                        'Đăng ký ngay',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
+                      child: const Text('Đăng ký ngay', style: TextStyle(color: Color(0xFFFF6A00), fontWeight: FontWeight.bold, fontSize: 14)),
                     ),
                   ],
                 ),
@@ -262,20 +191,20 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialButton(String label) {
+  Widget _buildSocialButton(String label, Color textTitleCol) {
     return Container(
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        color: AppColors.inputBackground,
+        color: Theme.of(context).cardColor,
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.inputBorder),
+        border: Border.all(color: textTitleCol.withOpacity(0.1)),
       ),
       child: Center(
         child: Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: textTitleCol,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),

@@ -4,6 +4,10 @@ import '../admin/admin_screen.dart';
 import '../../core/api/auth_service.dart';
 import '../history/history_page.dart';
 import '../history/donation_history_page.dart';
+import '../../core/api/donation_service.dart';
+import '../../core/api/sos_service.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/theme_provider.dart';
 import 'edit_profile_screen.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -20,9 +24,12 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _avatarUrl;
   double _bloodVolume = 0.0;
   int _donationCount = 0;
+  int _sosCount = 0;
   bool _isReadyToDonate = true;
 
   final _authService = AuthService();
+  final _donationService = DonationService();
+  final _sosService = SosService();
 
   @override
   void initState() {
@@ -36,7 +43,17 @@ class _ProfilePageState extends State<ProfilePage> {
     final bloodType = await _authService.getLoggedBloodType();
     final avatarUrl = await _authService.getLoggedAvatarUrl();
     final bloodVol = await _authService.getLoggedBloodVolume();
-    final donationCount = await _authService.getLoggedDonationCount();
+
+    int donationCount = 0;
+    int sosCount = 0;
+    try {
+      final dList = await _donationService.getMyHistory();
+      final sList = await _sosService.getMyHistory();
+      donationCount = dList.length;
+      sosCount = sList.length;
+    } catch (e) {
+      donationCount = await _authService.getLoggedDonationCount();
+    }
 
     if (mounted) {
       setState(() {
@@ -46,6 +63,7 @@ class _ProfilePageState extends State<ProfilePage> {
         _avatarUrl = avatarUrl;
         _bloodVolume = bloodVol;
         _donationCount = donationCount;
+        _sosCount = sosCount;
       });
     }
   }
@@ -53,9 +71,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1412),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Hồ sơ", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+        title: Text("Hồ sơ", style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -122,7 +140,7 @@ class _ProfilePageState extends State<ProfilePage> {
             // 2. Name & Badges
             Text(
               _fullName ?? "Đang tải...",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color),
             ),
             const SizedBox(height: 10),
             Row(
@@ -144,23 +162,22 @@ class _ProfilePageState extends State<ProfilePage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2D2726),
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     "ID: #${_phone?.substring(0, 4) ?? '0000'}84",
-                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
-            // 3. Sẵn sàng hiến máu Toggle
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF2A1C1A),
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -171,7 +188,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Row(
                           children: [
-                            const Text("Sẵn sàng hiến máu", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                            Text("Sẵn sàng hiến máu", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 14, fontWeight: FontWeight.bold)),
                             const SizedBox(width: 6),
                             Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle)),
                           ],
@@ -179,7 +196,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         const SizedBox(height: 6),
                         Text(
                           "Chỉ nhận thông báo SOS khi có yêu cầu\nphù hợp với nhóm máu của bạn.",
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, height: 1.4),
+                          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 11, height: 1.4),
                         ),
                       ],
                     ),
@@ -190,29 +207,74 @@ class _ProfilePageState extends State<ProfilePage> {
                     activeColor: Colors.white,
                     activeTrackColor: Colors.orange,
                     inactiveThumbColor: Colors.grey,
-                    inactiveTrackColor: const Color(0xFF1E1412),
+                    inactiveTrackColor: Theme.of(context).scaffoldBackgroundColor,
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 16),
+            
+            // 3.5 Dark Mode Toggle
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, child) {
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(themeProvider.isDarkMode ? "Chế độ tối" : "Chế độ sáng", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 14, fontWeight: FontWeight.bold)),
+                                const SizedBox(width: 6),
+                                Icon(themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode, size: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              "Chuyển đổi giao diện sáng/tối.",
+                              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 11, height: 1.4),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: themeProvider.isDarkMode,
+                        onChanged: (val) => themeProvider.toggleTheme(),
+                        activeColor: Colors.white,
+                        activeTrackColor: Colors.orange,
+                        inactiveThumbColor: Colors.grey,
+                        inactiveTrackColor: Theme.of(context).scaffoldBackgroundColor,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
 
             // 4. Three Stats Blocks
             Row(
               children: [
-                Expanded(child: _buildStatBox(Icons.favorite, Colors.redAccent, _donationCount.toString(), "SỐ LẦN HIẾN")),
+                Expanded(child: _buildStatBox(context, Icons.favorite, Colors.redAccent, _donationCount.toString(), "SỐ LẦN HIẾN")),
                 const SizedBox(width: 12),
-                Expanded(child: _buildStatBox(Icons.water_drop, Colors.red, "${_bloodVolume.toStringAsFixed(2)}L", "TỔNG ĐƠN VỊ")),
+                Expanded(child: _buildStatBox(context, Icons.water_drop, Colors.red, "${_bloodVolume.toStringAsFixed(2)}L", "TỔNG ĐƠN VỊ")),
                 const SizedBox(width: 12),
-                Expanded(child: _buildStatBox(Icons.person_add_alt_1, Colors.blueAccent, "12", "SOS HỖ TRỢ")),
+                Expanded(child: _buildStatBox(context, Icons.campaign, Colors.blueAccent, _sosCount.toString(), "SOS ĐÃ TẠO")),
               ],
             ),
             const SizedBox(height: 30),
 
             // 5. Thành tích & Huy hiệu
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
-              child: Text("Thành tích & Huy hiệu", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text("Thành tích & Huy hiệu", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
             Row(
@@ -273,14 +335,18 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 8),
             Container(
-              decoration: BoxDecoration(color: const Color(0xFF2A1C1A), borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.05)),
+              ),
               child: Column(
                 children: [
-                  _buildListTile(Icons.history, Colors.redAccent, "Lịch sử hiến tặng", onTap: () {
+                  _buildListTile(context, Icons.history, Colors.redAccent, "Lịch sử hiến tặng", onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const DonationHistoryPage()));
                   }),
-                  Divider(color: Colors.white.withOpacity(0.05), height: 1, indent: 56),
-                  _buildListTile(Icons.campaign, Colors.orangeAccent, "SOS đã tạo", onTap: () {
+                  Divider(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.05), height: 1, indent: 56),
+                  _buildListTile(context, Icons.campaign, Colors.orangeAccent, "SOS đã tạo", onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage()));
                   }),
                 ],
@@ -295,15 +361,19 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 8),
             Container(
-              decoration: BoxDecoration(color: const Color(0xFF2A1C1A), borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.05)),
+              ),
               child: Column(
                 children: [
-                  _buildListTile(Icons.person_outline, Colors.blueAccent, "Chỉnh sửa thông tin", onTap: () async {
+                  _buildListTile(context, Icons.person_outline, Colors.blueAccent, "Chỉnh sửa thông tin", onTap: () async {
                     final updated = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
                     if (updated == true) _loadUser();
                   }),
-                  Divider(color: Colors.white.withOpacity(0.05), height: 1, indent: 56),
-                  _buildListTile(Icons.notifications_none, Colors.purpleAccent, "Cài đặt thông báo", onTap: () {}),
+                  Divider(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.05), height: 1, indent: 56),
+                  _buildListTile(context, Icons.notifications_none, Colors.purpleAccent, "Cài đặt thông báo", onTap: () {}),
                 ],
               ),
             ),
@@ -359,30 +429,31 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatBox(IconData icon, Color iconColor, String value, String label) {
+  Widget _buildStatBox(BuildContext context, IconData icon, Color iconColor, String value, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A1C1A),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.05)),
       ),
       child: Column(
         children: [
           Icon(icon, color: iconColor, size: 18),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(value, style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 9, fontWeight: FontWeight.bold)),
+          Text(label, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 9, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  Widget _buildListTile(IconData icon, Color iconColor, String title, {required VoidCallback onTap}) {
+  Widget _buildListTile(BuildContext context, IconData icon, Color iconColor, String title, {required VoidCallback onTap}) {
     return ListTile(
       onTap: onTap,
       leading: Icon(icon, color: iconColor, size: 22),
-      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+      title: Text(title, style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 13, fontWeight: FontWeight.w600)),
       trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );

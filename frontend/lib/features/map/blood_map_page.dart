@@ -11,8 +11,6 @@ class BloodMapPage extends StatefulWidget {
 }
 
 class _BloodMapPageState extends State<BloodMapPage> {
-  static const bgDark = Color(0xFF120A08);
-  static const cardDark = Color(0xFF1E1412);
   static const sosRed = Color(0xFFB71C1C);
   static const ctaOrange = Color(0xFFFF6A00);
 
@@ -61,7 +59,7 @@ class _BloodMapPageState extends State<BloodMapPage> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      setState(() => _isLoadingLocation = false);
+      if (mounted) setState(() => _isLoadingLocation = false);
       return;
     }
 
@@ -69,13 +67,13 @@ class _BloodMapPageState extends State<BloodMapPage> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        setState(() => _isLoadingLocation = false);
+        if (mounted) setState(() => _isLoadingLocation = false);
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      setState(() => _isLoadingLocation = false);
+      if (mounted) setState(() => _isLoadingLocation = false);
       return;
     }
 
@@ -134,16 +132,16 @@ class _BloodMapPageState extends State<BloodMapPage> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-                children: [_searchBar(), const SizedBox(height: 12), _filters()],
+                children: [_searchBar(context), const SizedBox(height: 12), _filters(context)],
               ),
             ),
           ),
-          _bottomSheet(),
+          _bottomSheet(context),
           Positioned(
             right: 16, bottom: 220,
             child: FloatingActionButton(
               mini: true,
-              backgroundColor: cardDark,
+              backgroundColor: Theme.of(context).cardColor,
               onPressed: () => _mapController.move(_currentPosition, 14.0),
               child: const Icon(Icons.my_location, color: ctaOrange),
             ),
@@ -203,65 +201,69 @@ class _BloodMapPageState extends State<BloodMapPage> {
     return markers;
   }
 
-  Widget _searchBar() {
+  Widget _searchBar(BuildContext context) {
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: cardDark, borderRadius: BorderRadius.circular(14)),
-      child: const Row(children: [
-        Icon(Icons.search, color: Colors.white54), SizedBox(width: 8),
-        Expanded(child: Text("Tìm bệnh viện, nhóm máu...", style: TextStyle(color: Colors.white54))),
-        Icon(Icons.tune, color: ctaOrange),
+      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [
+        Icon(Icons.search, color: Theme.of(context).textTheme.bodyMedium?.color), 
+        const SizedBox(width: 8),
+        Expanded(child: Text("Tìm bệnh viện, nhóm máu...", style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color))),
+        const Icon(Icons.tune, color: ctaOrange),
       ]),
     );
   }
 
-  Widget _filters() {
-    return Row(children: [
-      _chip("Chỉ hiện SOS", true), const SizedBox(width: 8),
-      _chip("Gần nhất", false), const SizedBox(width: 8),
-      _chip("Nhóm máu A", false),
-    ]);
+  Widget _filters(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(children: [
+        _chip(context, "Chỉ hiện SOS", true), const SizedBox(width: 8),
+        _chip(context, "Gần nhất", false), const SizedBox(width: 8),
+        _chip(context, "Nhóm máu A", false),
+      ]),
+    );
   }
 
-  Widget _chip(String label, bool active) {
+  Widget _chip(BuildContext context, String label, bool active) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: active ? ctaOrange : cardDark,
+        color: active ? ctaOrange : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
       ),
       child: Text(label, style: TextStyle(
-        color: active ? Colors.white : Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+        color: active ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 
-  Widget _bottomSheet() {
+  Widget _bottomSheet(BuildContext context) {
     return DraggableScrollableSheet(
       initialChildSize: 0.35, minChildSize: 0.15, maxChildSize: 0.8,
       builder: (context, controller) {
         return Container(
           padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            color: cardDark,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, -2))],
+            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, -2))],
           ),
           child: ListView(controller: controller, children: [
             Center(child: Container(height: 4, width: 40, margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)))),
+              decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(2)))),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text("Điểm hiến & SOS gần bạn",
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-              _chip("SOS", true),
+              Text("Điểm hiến & SOS gần bạn",
+                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16, fontWeight: FontWeight.bold)),
+              _chip(context, "SOS", true),
             ]),
             const SizedBox(height: 16),
-            ..._sosPoints.map((sos) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _sosItem(sos))),
-            ..._hospitalPoints.map((hosp) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _hospitalItem(hosp))),
+            ..._sosPoints.map((sos) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _sosItem(context, sos))),
+            ..._hospitalPoints.map((hosp) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _hospitalItem(context, hosp))),
             const SizedBox(height: 12),
-            const Text("Chúng tôi chỉ hiển thị nhóm máu & địa điểm – bảo mật thông tin cá nhân",
-              style: TextStyle(color: Colors.white38, fontSize: 11), textAlign: TextAlign.center),
+            Text("Chúng tôi chỉ hiển thị nhóm máu & địa điểm – bảo mật thông tin cá nhân",
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 11), textAlign: TextAlign.center),
             const SizedBox(height: 24),
           ]),
         );
@@ -269,17 +271,17 @@ class _BloodMapPageState extends State<BloodMapPage> {
     );
   }
 
-  Widget _sosItem(Map<String, dynamic> sos) {
+  Widget _sosItem(BuildContext context, Map<String, dynamic> sos) {
     String distance = _calculateDistance(sos['lat'], sos['lng']);
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: bgDark, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(16)),
       child: Row(children: [
         const Icon(Icons.warning, color: ctaOrange), const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text("${sos['title']}: Nhóm ${sos['blood']}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text("${sos['title']}: Nhóm ${sos['blood']}", style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(sos['desc'], style: const TextStyle(color: Colors.white54, fontSize: 12)),
+          Text(sos['desc'], style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12)),
           const SizedBox(height: 4),
           Text("$distance • ${sos['time']}", style: const TextStyle(color: ctaOrange, fontSize: 12, fontWeight: FontWeight.w600)),
         ])),
@@ -295,19 +297,19 @@ class _BloodMapPageState extends State<BloodMapPage> {
     );
   }
 
-  Widget _hospitalItem(Map<String, dynamic> hosp) {
+  Widget _hospitalItem(BuildContext context, Map<String, dynamic> hosp) {
     String distance = _calculateDistance(hosp['lat'], hosp['lng']);
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: bgDark, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor, borderRadius: BorderRadius.circular(16)),
       child: Row(children: [
         const CircleAvatar(radius: 18, backgroundColor: Colors.blue,
           child: Icon(Icons.local_hospital, color: Colors.white, size: 18)),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(hosp['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(hosp['name'], style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text(hosp['address'], style: const TextStyle(color: Colors.white54, fontSize: 12)),
+          Text(hosp['address'], style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12)),
           const SizedBox(height: 4),
           Text("$distance • ${hosp['status']}",
             style: TextStyle(
@@ -316,7 +318,7 @@ class _BloodMapPageState extends State<BloodMapPage> {
         ])),
         GestureDetector(
           onTap: () => _mapController.move(LatLng(hosp['lat'], hosp['lng']), 15.0),
-          child: const Icon(Icons.chevron_right, color: Colors.white38),
+          child: Icon(Icons.chevron_right, color: Theme.of(context).textTheme.bodyMedium?.color),
         ),
       ]),
     );

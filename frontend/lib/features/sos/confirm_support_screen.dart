@@ -32,13 +32,17 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
   Widget build(BuildContext context) {
     // Standard mock point for map
     final location = const LatLng(21.000, 105.845);
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final cardColor = Theme.of(context).cardColor;
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textSecondary = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
 
     return Scaffold(
       body: Stack(
         children: [
           // 1. Bottom Dark Background
           Container(
-            color: const Color(0xFF1B110F),
+            color: scaffoldBg,
           ),
           
           // 2. Top Header Map
@@ -79,8 +83,8 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          const Color(0xFF1B110F).withValues(alpha: 0.5),
-                          const Color(0xFF1B110F).withValues(alpha: 1.0),
+                          scaffoldBg.withValues(alpha: 0.5),
+                          scaffoldBg.withValues(alpha: 1.0),
                         ],
                         stops: const [0.5, 0.8, 1.0],
                       ),
@@ -112,11 +116,11 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        icon: Icon(Icons.arrow_back, color: textPrimary),
                         onPressed: () => Navigator.pop(context),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.share, color: Colors.white),
+                        icon: Icon(Icons.share, color: textPrimary),
                         onPressed: () {},
                       ),
                     ],
@@ -132,17 +136,17 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
                     children: [
                       Text(
                         widget.sosData['location']?.toString() ?? 'Bệnh viện Bạch Mai',
-                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: textPrimary, fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.location_on, color: Colors.grey, size: 16),
-                          SizedBox(width: 8),
+                          Icon(Icons.location_on, color: textSecondary, size: 16),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               '78 Giải Phóng, Phương Mai, Đống Đa', // Dummy sub-address
-                              style: TextStyle(color: Colors.white70, fontSize: 13),
+                              style: TextStyle(color: textSecondary, fontSize: 13),
                             ),
                           ),
                         ],
@@ -169,7 +173,7 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF281C19),
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -195,12 +199,12 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
                                 children: [
                                   Text(
                                     widget.sosData['reason']?.toString() ?? 'Tai nạn giao thông',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                    style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
                                     widget.sosData['description']?.toString() ?? 'Cần gấp 2 đơn vị máu toàn phần. Tình trạng bệnh nhân đang nguy kịch',
-                                    style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                                    style: TextStyle(color: textSecondary, fontSize: 13, height: 1.4),
                                   ),
                                 ],
                               ),
@@ -219,17 +223,17 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF281C19),
+                            color: cardColor,
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Column(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.navigation, color: Color(0xFFFF6A00), size: 20),
-                              SizedBox(height: 12),
-                              Text('Khoảng cách', style: TextStyle(fontSize: 12, color: Colors.white70)),
-                              SizedBox(height: 4),
-                              Text('1.2 km', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Icon(Icons.navigation, color: Color(0xFFFF6A00), size: 20),
+                              const SizedBox(height: 12),
+                              Text('Khoảng cách', style: TextStyle(fontSize: 12, color: textSecondary)),
+                              const SizedBox(height: 4),
+                              Text('1.2 km', style: TextStyle(color: textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -239,17 +243,17 @@ class _ConfirmSupportScreenState extends State<ConfirmSupportScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF281C19),
+                            color: cardColor,
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Column(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.directions_car, color: Colors.blueAccent, size: 20),
-                              SizedBox(height: 12),
-                              Text('Thời gian đến', style: TextStyle(fontSize: 12, color: Colors.white70)),
-                              SizedBox(height: 4),
-                              Text('~5 phút', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Icon(Icons.directions_car, color: Colors.blueAccent, size: 20),
+                              const SizedBox(height: 12),
+                              Text('Thời gian đến', style: TextStyle(fontSize: 12, color: textSecondary)),
+                              const SizedBox(height: 4),
+                              Text('~5 phút', style: TextStyle(color: textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),

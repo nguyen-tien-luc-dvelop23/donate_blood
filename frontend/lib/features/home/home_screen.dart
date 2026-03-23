@@ -30,11 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1412),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: _pages[_currentIndex],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Điều hướng đến form SOS khẩn cấp
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const SOSFormPage()),
@@ -43,14 +42,14 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: const Color(0xFFFF6A00),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
-          side: const BorderSide(color: Color(0xFF1E1412), width: 4),
+          side: BorderSide(color: Theme.of(context).cardColor, width: 4),
         ),
         elevation: 0,
         child: const Icon(Icons.water_drop, color: Colors.white, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         child: SizedBox(
@@ -151,19 +150,24 @@ class _HomePageState extends State<_HomePage> {
   Future<void> _loadUserData() async {
     final name = await _authService.getLoggedName();
     final phone = await _authService.getLoggedPhone();
-    setState(() {
-      _fullName = name;
-      _phone = phone;
-    });
+    if (mounted) {
+      setState(() {
+        _fullName = name;
+        _phone = phone;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    var textSubCol = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1210), // Màu nền tối
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 40), // Khoảng trống padding bottom
+          padding: const EdgeInsets.only(bottom: 40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -188,29 +192,29 @@ class _HomePageState extends State<_HomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Xin chào',
-                            style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                            style: TextStyle(color: textSubCol, fontSize: 13, fontWeight: FontWeight.w600),
                           ),
                           Text(
                             _fullName != null && _fullName!.isNotEmpty ? _fullName! : (_phone ?? 'Người dùng'),
-                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: textTitleCol, fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 2),
                           Row(
-                            children: const [
-                              Icon(Icons.location_on_outlined, color: Colors.white, size: 14),
-                              SizedBox(width: 4),
+                            children: [
+                              Icon(Icons.location_on_outlined, color: textSubCol, size: 14),
+                              const SizedBox(width: 4),
                               Text(
                                 'Hà Nội - Việt Nam',
-                                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                style: TextStyle(color: textSubCol, fontSize: 12, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+                    Icon(Icons.notifications_none, color: textTitleCol, size: 28),
                   ],
                 ),
               ),
@@ -249,13 +253,13 @@ class _HomePageState extends State<_HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         children: [
                           TextSpan(
                             text: 'Cần máu khẩn cấp ',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: textTitleCol, fontSize: 16, fontWeight: FontWeight.bold),
                           ),
-                          TextSpan(
+                          const TextSpan(
                             text: '- LIVE',
                             style: TextStyle(color: Color(0xFFFF6A00), fontSize: 16, fontWeight: FontWeight.bold),
                           ),
@@ -266,7 +270,7 @@ class _HomePageState extends State<_HomePage> {
                       onTap: () {
                          Navigator.push(context, MaterialPageRoute(builder: (_) => const SOSPage()));
                       },
-                      child: const Text('Xem tất cả', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+                      child: Text('Xem tất cả', style: TextStyle(color: textSubCol, fontSize: 10, fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),
@@ -279,7 +283,7 @@ class _HomePageState extends State<_HomePage> {
                 child: _isLoadingSos 
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6A00)))
                     : _activeSosList.isEmpty
-                        ? const Center(child: Text('Chưa có yêu cầu SOS nào', style: TextStyle(color: Colors.white)))
+                        ? Center(child: Text('Chưa có yêu cầu SOS nào', style: TextStyle(color: textTitleCol)))
                         : ListView.builder(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -308,27 +312,29 @@ class _HomePageState extends State<_HomePage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A1C1A),
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.favorite, color: Colors.red, size: 24),
                           const SizedBox(width: 16),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Sẵn sàng hiến máu', style: TextStyle(color: Colors.white, fontSize: 13)),
-                                Text('Thông báo SOS gần bạn', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                                Text('Sẵn sàng hiến máu', style: TextStyle(color: textTitleCol, fontSize: 13)),
+                                Text('Thông báo SOS gần bạn', style: TextStyle(color: textSubCol, fontSize: 11)),
                               ],
                             ),
                           ),
                           Switch(
                             value: _isReadyToDonate,
                             onChanged: (val) => setState(() => _isReadyToDonate = val),
-                            activeColor: const Color(0xFFFF6A00),
-                            activeTrackColor: const Color(0xFFFF6A00).withOpacity(0.4),
+                            activeColor: Colors.white,
+                            activeTrackColor: const Color(0xFFFF6A00),
+                            inactiveThumbColor: Colors.grey,
+                            inactiveTrackColor: Theme.of(context).scaffoldBackgroundColor,
                           ),
                         ],
                       ),
@@ -339,17 +345,16 @@ class _HomePageState extends State<_HomePage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF331E1E), // Đỏ nâu tối
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.water_drop_outlined, color: Color(0xFFFFB74D), size: 20),
                           const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text('Bạn đã hiến máu 3 lần', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          Expanded(
+                            child: Text('Bạn đã hiến máu 3 lần. Xin cảm ơn', style: TextStyle(color: textSubCol, fontSize: 12)),
                           ),
-                          const Text('Cảm ơn bạn ', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                           Icon(Icons.favorite_border, color: Colors.red[300], size: 16),
                         ],
                       ),
@@ -360,11 +365,11 @@ class _HomePageState extends State<_HomePage> {
               const SizedBox(height: 24),
 
               // 5. Tiện Ích & Cộng đồng
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   'Tiện Ích & Cộng đồng',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: textTitleCol, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 16),
@@ -410,6 +415,9 @@ class _HomePageState extends State<_HomePage> {
     required String buttonText,
     required dynamic sosData,
   }) {
+    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    var textSubCol = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -418,58 +426,65 @@ class _HomePageState extends State<_HomePage> {
         );
       },
       child: Container(
-      width: 250,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF231917), // Nền thẻ
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 45,
-                height: 45,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFF3D00), // Đỏ cam
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    bloodType,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+        width: 250,
+        margin: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 45,
+                  height: 45,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFF3D00), // Đỏ cam
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      bloodType,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              const Text('LIVE', style: TextStyle(color: Color(0xFFFF6A00), fontWeight: FontWeight.w900, fontSize: 16)),
-            ],
-          ),
-          const Spacer(),
-          Text(hospitalName, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(noteText, style: const TextStyle(color: Color(0xFFFF6A00), fontSize: 12, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          Text(timeAndDistance, style: const TextStyle(color: Colors.white70, fontSize: 11)),
-          const Spacer(),
-          SizedBox(
-            width: double.infinity,
-            height: 38,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF6A00),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Text(buttonText, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(width: 12),
+                const Text('LIVE', style: TextStyle(color: Color(0xFFFF6A00), fontWeight: FontWeight.w900, fontSize: 16)),
+              ],
             ),
-          ),
-        ],
+            const Spacer(),
+            Text(hospitalName, style: TextStyle(color: textTitleCol, fontSize: 16, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+            Text(noteText, style: const TextStyle(color: Color(0xFFFF6A00), fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 6),
+            Text(timeAndDistance, style: TextStyle(color: textSubCol, fontSize: 11)),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ConfirmSupportScreen(sosData: sosData)),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6A00),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(vertical: 0),
+                  minimumSize: const Size(double.infinity, 38),
+                ),
+                child: const Text('Tôi có thể giúp', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -478,20 +493,22 @@ class _HomePageState extends State<_HomePage> {
     required String label,
     required VoidCallback onTap,
   }) {
+    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 120,
         decoration: BoxDecoration(
-          color: const Color(0xFF231917),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 1),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: const Color(0xFFFF6A00), size: 36),
             const SizedBox(height: 16),
-            Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
+            Text(label, style: TextStyle(color: textTitleCol, fontSize: 14)),
           ],
         ),
       ),

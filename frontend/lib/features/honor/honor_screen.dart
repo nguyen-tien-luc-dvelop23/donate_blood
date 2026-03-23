@@ -53,10 +53,14 @@ class _HonorScreenState extends State<HonorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    var bgColor = Theme.of(context).scaffoldBackgroundColor;
+    var cardColor = Theme.of(context).cardColor;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1210), // Trùng màu nền HomeScreen
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text("Vinh danh cộng đồng", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+        title: Text("Vinh danh cộng đồng", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textTitleCol)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -66,10 +70,10 @@ class _HonorScreenState extends State<HonorScreen> {
             onTap: () => Navigator.pop(context),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: textTitleCol.withOpacity(0.05),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              child: Icon(Icons.arrow_back, color: textTitleCol, size: 20),
             ),
           ),
         ),
@@ -152,8 +156,9 @@ class _HonorScreenState extends State<HonorScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2D2726), // Màu tối
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: textTitleCol.withOpacity(0.05)),
                     ),
                     child: Column(
                       children: [
@@ -162,11 +167,11 @@ class _HonorScreenState extends State<HonorScreen> {
                           children: [
                             const Icon(Icons.water_drop, color: Color(0xFFFF5722), size: 18),
                             const SizedBox(width: 8),
-                            const Text("8,450", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                            Text("8,450", style: TextStyle(color: textTitleCol, fontSize: 18, fontWeight: FontWeight.bold)),
                           ],
                         ),
                         const SizedBox(height: 4),
-                        const Text("ĐƠN VỊ MÁU", style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text("ĐƠN VỊ MÁU", style: TextStyle(color: textTitleCol.withOpacity(0.7), fontSize: 12, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -183,9 +188,9 @@ class _HonorScreenState extends State<HonorScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Top người hiến", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text("Top người hiến", style: TextStyle(color: textTitleCol, fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text("Những tấm lòng vàng tiêu\nbiểu", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, height: 1.4)),
+                    Text("Những tấm lòng vàng tiêu\nbiểu", style: TextStyle(color: textTitleCol.withOpacity(0.5), fontSize: 12, height: 1.4)),
                   ],
                 ),
                 Row(
@@ -202,10 +207,11 @@ class _HonorScreenState extends State<HonorScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: textTitleCol.withOpacity(0.1)),
                       ),
-                      child: const Text("Tất cả", style: TextStyle(color: Colors.black87, fontSize: 12, fontWeight: FontWeight.bold)),
+                      child: Text("Tất cả", style: TextStyle(color: textTitleCol, fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -220,7 +226,7 @@ class _HonorScreenState extends State<HonorScreen> {
               itemCount: _topDonors.length,
               itemBuilder: (context, index) {
                 final donor = _topDonors[index];
-                return _buildDonorCard(donor);
+                return _buildDonorCard(donor, textTitleCol, cardColor);
               },
             ),
             const SizedBox(height: 20),
@@ -230,7 +236,7 @@ class _HonorScreenState extends State<HonorScreen> {
     );
   }
 
-  Widget _buildDonorCard(Map<String, dynamic> donor) {
+  Widget _buildDonorCard(Map<String, dynamic> donor, Color textTitleCol, Color cardColor) {
     final bool isFirst = donor['isFirst'] as bool;
     final int rank = donor['rank'] as int;
     
@@ -238,9 +244,9 @@ class _HonorScreenState extends State<HonorScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isFirst ? const Color(0xFFE54304) : const Color(0xFF231917),
+        color: isFirst ? const Color(0xFFE54304) : cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: isFirst ? null : Border.all(color: const Color(0xFFE54304).withOpacity(0.2), width: 1),
+        border: isFirst ? null : Border.all(color: textTitleCol.withOpacity(0.05), width: 1),
       ),
       child: Row(
         children: [
@@ -249,7 +255,7 @@ class _HonorScreenState extends State<HonorScreen> {
             width: 30,
             child: isFirst
               ? const Icon(Icons.military_tech, color: Color(0xFFFFD700), size: 30) // Huy chương vàng
-              : Center(child: Text(rank.toString(), style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 20, fontWeight: FontWeight.bold))),
+              : Center(child: Text(rank.toString(), style: TextStyle(color: textTitleCol.withOpacity(0.8), fontSize: 20, fontWeight: FontWeight.bold))),
           ),
           const SizedBox(width: 12),
           
@@ -288,13 +294,13 @@ class _HonorScreenState extends State<HonorScreen> {
               children: [
                 Text(
                   donor['name'] as String,
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: isFirst ? Colors.white : textTitleCol, fontSize: 14, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   donor['subtitle'] as String,
                   style: TextStyle(
-                    color: isFirst ? const Color(0xFFFFD700).withOpacity(0.9) : Colors.white.withOpacity(0.5),
+                    color: isFirst ? const Color(0xFFFFD700).withOpacity(0.9) : textTitleCol.withOpacity(0.5),
                     fontSize: 11,
                   ),
                 ),
@@ -306,13 +312,13 @@ class _HonorScreenState extends State<HonorScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isFirst ? const Color(0xFF633A00) : const Color(0xFF3B2F2B),
+              color: isFirst ? const Color(0xFF633A00) : textTitleCol.withOpacity(0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               donor['volume'] as String,
               style: TextStyle(
-                color: isFirst ? const Color(0xFFFFD700) : Colors.white.withOpacity(0.8),
+                color: isFirst ? const Color(0xFFFFD700) : textTitleCol.withOpacity(0.8),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

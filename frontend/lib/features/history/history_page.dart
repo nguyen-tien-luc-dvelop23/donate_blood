@@ -108,13 +108,15 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF160E0C),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Lịch sử hoạt động",
           style: TextStyle(
-            color: Colors.white,
+            color: textTitleCol,
             fontSize: 18,
             fontWeight: FontWeight.w800,
           ),
@@ -123,7 +125,7 @@ class _HistoryPageState extends State<HistoryPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+          icon: Icon(Icons.arrow_back, color: textTitleCol, size: 22),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -132,7 +134,7 @@ class _HistoryPageState extends State<HistoryPage> {
           : RefreshIndicator(
               onRefresh: _loadData,
               color: const Color(0xFFFF4800),
-              backgroundColor: const Color(0xFF1E1412),
+              backgroundColor: Theme.of(context).cardColor,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -140,29 +142,29 @@ class _HistoryPageState extends State<HistoryPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Thống kê
-                    _buildSummaryRow(),
+                    _buildSummaryRow(context),
                     const SizedBox(height: 28),
 
                     // Huy hiệu đạt được
-                    _buildBadgesSection(),
+                    _buildBadgesSection(context),
                     const SizedBox(height: 24),
 
                     // Filter
-                    _buildFilterRow(),
+                    _buildFilterRow(context),
                     const SizedBox(height: 32),
 
                     // Timeline
-                    const Text(
+                    Text(
                       "Hành trình của bạn",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: textTitleCol,
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildTimeline(),
+                    _buildTimeline(context),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -172,10 +174,11 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   // ================= SUMMARY =================
-  Widget _buildSummaryRow() {
+  Widget _buildSummaryRow(BuildContext context) {
     return Row(
       children: [
         _summaryCard(
+          context: context,
           icon: Icons.favorite_border,
           value: _donationCount.toString(),
           label: "Tổng số lần hiến",
@@ -184,6 +187,7 @@ class _HistoryPageState extends State<HistoryPage> {
         ),
         const SizedBox(width: 12),
         _summaryCard(
+          context: context,
           icon: Icons.water_drop_outlined,
           value: _bloodVolume.toInt().toString(),
           unit: "ml",
@@ -196,6 +200,7 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Widget _summaryCard({
+    required BuildContext context,
     required IconData icon,
     required String value,
     String? unit,
@@ -203,13 +208,15 @@ class _HistoryPageState extends State<HistoryPage> {
     required Color iconColor,
     required Color valueColor,
   }) {
+    final textSubCol = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1412),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.op(0.04)),
+          border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 1),
         ),
         child: Column(
           children: [
@@ -243,7 +250,7 @@ class _HistoryPageState extends State<HistoryPage> {
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.op(0.6),
+                color: textSubCol,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -255,7 +262,9 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   // ================= BADGES =================
-  Widget _buildBadgesSection() {
+  Widget _buildBadgesSection(BuildContext context) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
     // Logic for badges can be made dynamic later based on donationCount
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,6 +284,7 @@ class _HistoryPageState extends State<HistoryPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _badgeItem(
+              context: context,
               title: "Chiến binh ${_donationCount >= 3 ? 3 : 0}\nlần",
               imageAvatar: "https://i.pravatar.cc/100?img=11",
               borderColor: const Color(0xFFFFB300),
@@ -282,6 +292,7 @@ class _HistoryPageState extends State<HistoryPage> {
               isLocked: _donationCount < 3,
             ),
             _badgeItem(
+              context: context,
               title: "Tình nguyện\nviên",
               icon: Icons.volunteer_activism,
               iconColor: Colors.white,
@@ -290,6 +301,7 @@ class _HistoryPageState extends State<HistoryPage> {
               isLocked: _donationCount < 1,
             ),
             _badgeItem(
+              context: context,
               title: "Người cứu\nmạng",
               icon: Icons.medical_services,
               iconColor: Colors.white,
@@ -298,11 +310,12 @@ class _HistoryPageState extends State<HistoryPage> {
               isLocked: _donationCount < 5,
             ),
             _badgeItem(
+              context: context,
               title: "Siêu anh\nhùng",
               icon: Icons.lock_outline,
-              iconColor: Colors.white.op(0.3),
+              iconColor: textTitleCol.op(0.3),
               borderColor: Colors.transparent,
-              bgColor: Colors.white.op(0.05),
+              bgColor: Theme.of(context).cardColor,
               isLocked: true,
             ),
           ],
@@ -312,15 +325,19 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Widget _badgeItem({
+    required BuildContext context,
     required String title,
     String? imageAvatar,
     IconData? icon,
     Color? iconColor,
     required Color borderColor,
-    Color bgColor = Colors.transparent,
+    Color? bgColor,
     bool hasStar = false,
     bool isLocked = false,
   }) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    bgColor ??= Colors.transparent;
+
     return SizedBox(
       width: 76,
       child: Column(
@@ -334,7 +351,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isLocked ? Colors.white.op(0.05) : bgColor,
+                  color: isLocked ? textTitleCol.op(0.05) : bgColor,
                   border: Border.all(
                     color: isLocked ? Colors.transparent : borderColor,
                     width: isLocked ? 0 : 2,
@@ -347,7 +364,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       : null,
                 ),
                 child: isLocked
-                    ? Icon(Icons.lock_outline, color: Colors.white.op(0.3), size: 20)
+                    ? Icon(Icons.lock_outline, color: textTitleCol.op(0.3), size: 20)
                     : icon != null
                         ? Icon(icon, color: iconColor, size: 24)
                         : null,
@@ -357,9 +374,10 @@ class _HistoryPageState extends State<HistoryPage> {
                   bottom: -6,
                   child: Container(
                     padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
                       shape: BoxShape.circle,
+                      border: Border.all(color: textTitleCol.op(0.1), width: 1),
                     ),
                     child: const Icon(Icons.star, color: Colors.grey, size: 14),
                   ),
@@ -371,7 +389,7 @@ class _HistoryPageState extends State<HistoryPage> {
             title,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isLocked ? Colors.white.op(0.4) : Colors.white,
+              color: isLocked ? textTitleCol.op(0.4) : textTitleCol,
               fontSize: 11,
               fontWeight: FontWeight.w700,
               height: 1.3,
@@ -383,32 +401,35 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   // ================= FILTER =================
-  Widget _buildFilterRow() {
+  Widget _buildFilterRow(BuildContext context) {
     return Row(
       children: [
-        _filterBtn("Tất cả"),
+        _filterBtn(context, "Tất cả"),
         const SizedBox(width: 10),
-        _filterBtn("Đã hiến"),
+        _filterBtn(context, "Đã hiến"),
         const SizedBox(width: 10),
-        _filterBtn("SOS đã tạo"),
+        _filterBtn(context, "SOS đã tạo"),
       ],
     );
   }
 
-  Widget _filterBtn(String label) {
+  Widget _filterBtn(BuildContext context, String label) {
     bool active = _activeFilter == label;
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
     return GestureDetector(
       onTap: () => _onFilterChanged(label),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFFF4800) : const Color(0xFF281C19),
+          color: active ? const Color(0xFFFF4800) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: active ? Colors.transparent : textTitleCol.op(0.1)),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: active ? Colors.white : Colors.white.op(0.6),
+            color: active ? Colors.white : textTitleCol.op(0.6),
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -418,18 +439,22 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   // ================= TIMELINE =================
-  Widget _buildTimeline() {
+  Widget _buildTimeline(BuildContext context) {
     if (_filteredItems.isEmpty) {
+      final textSubCol = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Center(
           child: Text(
             "Chưa có hoạt động nào trong mục này",
-            style: TextStyle(color: Colors.white.op(0.5), fontSize: 14),
+            style: TextStyle(color: textSubCol, fontSize: 14),
           ),
         ),
       );
     }
+
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
     return Stack(
       children: [
@@ -440,14 +465,14 @@ class _HistoryPageState extends State<HistoryPage> {
           bottom: 0,
           child: Container(
             width: 2,
-            color: Colors.white.op(0.1),
+            color: textTitleCol.op(0.1),
           ),
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (int i = 0; i < _filteredItems.length; i++) ...[
-               _buildTimelineItem(i),
+               _buildTimelineItem(context, i),
             ],
             const SizedBox(height: 24),
             Row(
@@ -456,10 +481,10 @@ class _HistoryPageState extends State<HistoryPage> {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(color: Colors.white.op(0.2), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: textTitleCol.op(0.2), shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 24),
-                Text("Bắt đầu hành trình", style: TextStyle(color: Colors.white.op(0.3), fontSize: 12)),
+                Text("Bắt đầu hành trình", style: TextStyle(color: textTitleCol.op(0.3), fontSize: 12)),
               ],
             )
           ],
@@ -468,7 +493,7 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildTimelineItem(int index) {
+  Widget _buildTimelineItem(BuildContext context, int index) {
     final item = _filteredItems[index];
     final DateTime date = item['date'];
     final String formattedTime = DateFormat('HH:mm').format(date);
@@ -489,8 +514,9 @@ class _HistoryPageState extends State<HistoryPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (showDivider) _monthDivider(monthStr),
+        if (showDivider) _monthDivider(context, monthStr),
         _timelineItemUI(
+          context: context,
           nodeIcon: item['type'] == 'donation' ? Icons.favorite : Icons.notifications_active,
           nodeColor: item['type'] == 'donation' ? const Color(0xFF2ECC71) : const Color(0xFFFF4800),
           isTopNode: index == 0,
@@ -506,7 +532,9 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _monthDivider(String text) {
+  Widget _monthDivider(BuildContext context, String text) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
     return Padding(
       padding: const EdgeInsets.only(left: 42, bottom: 20, top: 8),
       child: Row(
@@ -514,7 +542,7 @@ class _HistoryPageState extends State<HistoryPage> {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(color: Colors.white.op(0.3), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: textTitleCol.op(0.3), shape: BoxShape.circle),
           ),
           const SizedBox(width: 16),
           Text(
@@ -532,6 +560,7 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Widget _timelineItemUI({
+    required BuildContext context,
     required IconData nodeIcon,
     required Color nodeColor,
     bool isTopNode = false,
@@ -543,6 +572,9 @@ class _HistoryPageState extends State<HistoryPage> {
     String? rightStatusTag,
     Color? rightStatusColor,
   }) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final textSubCol = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Row(
@@ -553,7 +585,7 @@ class _HistoryPageState extends State<HistoryPage> {
             margin: const EdgeInsets.only(top: 14),
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: const Color(0xFF160E0C),
+              color: Theme.of(context).scaffoldBackgroundColor,
               shape: BoxShape.circle,
               border: Border.all(
                 color: isTopNode ? nodeColor : nodeColor.op(0.5),
@@ -569,9 +601,9 @@ class _HistoryPageState extends State<HistoryPage> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1412),
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.op(0.04)),
+                border: Border.all(color: textTitleCol.op(0.04)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -618,8 +650,8 @@ class _HistoryPageState extends State<HistoryPage> {
                   if (title != null)
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: textTitleCol,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
@@ -627,19 +659,19 @@ class _HistoryPageState extends State<HistoryPage> {
                   const SizedBox(height: 4),
                   Text(
                     time,
-                    style: TextStyle(color: Colors.white.op(0.4), fontSize: 11),
+                    style: TextStyle(color: textSubCol, fontSize: 11),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.location_on_outlined, color: Colors.white.op(0.4), size: 14),
+                      Icon(Icons.location_on_outlined, color: textSubCol, size: 14),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           subtitle,
                           style: TextStyle(
-                            color: Colors.white.op(0.5),
+                            color: textSubCol,
                             fontSize: 12.5,
                             height: 1.4,
                           ),

@@ -33,7 +33,8 @@ if (!string.IsNullOrEmpty(databaseUrl))
     // Convert mysql:// URI to ADO.NET connection string
     var uri = new Uri(databaseUrl);
     var userInfo = uri.UserInfo.Split(':');
-    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Uid={userInfo[0]};Pwd={userInfo[1]};";
+    // Added Connect Timeout, Default Command Timeout, and AllowUserVariables for stability on cloud proxies (e.g. Railway/Render)
+    connectionString = $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=Preferred;Connect Timeout=60;Default Command Timeout=60;AllowUserVariables=True;";
 }
 else
 {
@@ -41,7 +42,12 @@ else
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35))));
+{
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)), mySqlOptions => 
+    {
+        mySqlOptions.CommandTimeout(60); // Increase command timeout for migrations/startup
+    });
+});
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -89,11 +95,14 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     
     // Drop existing tables to ensure a clean schema creation (Dev mode only)
-    try {
-        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `DonationRecords`;");
-        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `SosRequests`;");
-        context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `Users`;");
-    } catch { }
+    if (app.Environment.IsDevelopment())
+    {
+        try {
+            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `DonationRecords`;");
+            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `SosRequests`;");
+            context.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS `Users`;");
+        } catch { }
+    }
 
     context.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS `Users` (

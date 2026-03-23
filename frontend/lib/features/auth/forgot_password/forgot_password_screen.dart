@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
 import '../otp/otp_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -20,21 +19,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final textSubCol = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios, color: textTitleCol),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Quên mật khẩu',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
+          style: TextStyle(
+            color: textTitleCol,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
         ),
         centerTitle: true,
       ),
@@ -44,35 +47,39 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            Text(
+            const Text(
               'Khôi phục mật khẩu',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: TextStyle(
+                color: Color(0xFFFF6A00),
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               'Vui lòng nhập số điện thoại đã đăng ký để nhận mã OTP xác thực và tạo mật khẩu mới.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: TextStyle(
+                color: textSubCol,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 48),
             Text(
               'Số điện thoại',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+              style: TextStyle(
+                color: textTitleCol,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
+              style: TextStyle(color: textTitleCol),
+              decoration: const InputDecoration(
                 hintText: 'Nhập số điện thoại',
-                suffixIcon: Icon(Icons.phone_outlined, color: AppColors.textMuted),
+                suffixIcon: Icon(Icons.phone_outlined),
               ),
             ),
             const SizedBox(height: 48),

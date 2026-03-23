@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
 import '../otp/otp_screen.dart';
 import '../../../core/api/auth_service.dart';
 import '../login/login_screen.dart';
@@ -43,9 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     setState(() => _isLoading = true);
-
     final success = await _authService.register(phone, password, name, _selectedBloodType);
-
     setState(() => _isLoading = false);
 
     if (success) {
@@ -82,21 +79,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final textSubCol = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    final cardCol = Theme.of(context).cardColor;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios, color: textTitleCol),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Đăng ký tài khoản',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
+          style: TextStyle(
+            color: textTitleCol,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
         ),
         centerTitle: true,
       ),
@@ -106,109 +108,78 @@ class _RegisterScreenState extends State<RegisterScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            Text(
-              'Xin chào,',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-            ),
+            Text('Xin chào,', style: TextStyle(color: textTitleCol, fontSize: 16)),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Bắt đầu kết nối khẩn cấp',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: TextStyle(
+                color: Color(0xFFFF6A00),
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               'Nhập số điện thoại để tạo tài khoản. Chúng tôi sẽ gửi OTP để xác thực danh tính của bạn.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: TextStyle(color: textSubCol, fontSize: 14),
             ),
             const SizedBox(height: 32),
-            Text(
-              'Mã vùng',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-            ),
+            Text('Mã vùng', style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.inputBackground,
+                color: cardCol,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.inputBorder),
+                border: Border.all(color: textTitleCol.withOpacity(0.1)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.public, color: AppColors.textMuted, size: 20),
+                   Icon(Icons.public, color: textTitleCol.withOpacity(0.5), size: 20),
                   const SizedBox(width: 8),
-                  Text('+ 84', style: TextStyle(color: AppColors.textPrimary)),
+                  Text('+ 84', style: TextStyle(color: textTitleCol)),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Họ và tên',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-            ),
+            Text('Họ và tên', style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             TextField(
               controller: _nameController,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
+              style: TextStyle(color: textTitleCol),
+              decoration: const InputDecoration(
                 hintText: 'Nhập họ và tên',
-                suffixIcon: Icon(Icons.person_outline, color: AppColors.textMuted),
+                suffixIcon: Icon(Icons.person_outline),
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Số điện thoại',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-            ),
+            Text('Số điện thoại', style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
+              style: TextStyle(color: textTitleCol),
+              decoration: const InputDecoration(
                 hintText: 'Nhập số điện thoại',
-                suffixIcon: Icon(Icons.phone_outlined, color: AppColors.textMuted),
+                suffixIcon: Icon(Icons.phone_outlined),
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Mật khẩu',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-            ),
+            Text('Mật khẩu', style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             TextField(
               controller: _passwordController,
               obscureText: true,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
+              style: TextStyle(color: textTitleCol),
+              decoration: const InputDecoration(
                 hintText: 'Nhập mật khẩu',
-                suffixIcon: Icon(Icons.lock_outline, color: AppColors.textMuted),
+                suffixIcon: Icon(Icons.lock_outline),
               ),
             ),
             const SizedBox(height: 24),
-            _buildMedicalInfoSection(),
+            _buildMedicalInfoSection(textTitleCol, cardCol),
             const SizedBox(height: 24),
-            Text(
-              'Nhóm máu của bạn',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-            ),
+            Text('Nhóm máu của bạn', style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 12,
@@ -220,16 +191,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : AppColors.inputBackground,
+                      color: isSelected ? const Color(0xFFFF6A00) : cardCol,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.inputBorder,
+                        color: isSelected ? const Color(0xFFFF6A00) : textTitleCol.withOpacity(0.1),
                       ),
                     ),
                     child: Text(
                       type,
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: isSelected ? Colors.white : textTitleCol,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -238,22 +209,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               }).toList(),
             ),
             const SizedBox(height: 24),
-            Text(
-              'Ngày hiến máu gần nhất (nếu có)',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-            ),
+            Text('Ngày hiến máu gần nhất (nếu có)', style: TextStyle(color: textTitleCol, fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             TextField(
               controller: _dateController,
               readOnly: true,
               onTap: _selectDate,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: textTitleCol),
               decoration: InputDecoration(
                 hintText: 'Nhập ngày hiến máu gần nhất (nếu có)',
                 suffixIcon: IconButton(
-                  icon: Icon(Icons.calendar_today, color: AppColors.textMuted),
+                  icon: const Icon(Icons.calendar_today),
                   onPressed: _selectDate,
                 ),
               ),
@@ -277,15 +243,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                  children: [
-                    const TextSpan(text: 'Bằng việc tiếp tục, bạn đồng ý với '),
+                  style: TextStyle(color: textSubCol, fontSize: 12),
+                  children: const [
+                     TextSpan(text: 'Bằng việc tiếp tục, bạn đồng ý với '),
                     TextSpan(
                       text: 'Điều khoản dịch vụ của chúng tôi',
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: Color(0xFFFF6A00),
                         decoration: TextDecoration.underline,
                         fontWeight: FontWeight.w600,
                       ),
@@ -301,18 +265,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildMedicalInfoSection() {
+  Widget _buildMedicalInfoSection(Color textTitleCol, Color cardCol) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.inputBackground.withOpacity(0.5),
+        color: cardCol,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.inputBorder),
+        border: Border.all(color: textTitleCol.withOpacity(0.1)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lock_outline, color: AppColors.primary, size: 24),
+          const Icon(Icons.lock_outline, color: Color(0xFFFF6A00), size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -320,17 +284,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 Text(
                   'Thông tin y tế',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: TextStyle(
+                    color: textTitleCol,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Thông tin này chỉ được chia sẻ với đội ngũ y tế khi bạn kích hoạt SOS.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                  style: TextStyle(
+                    color: textTitleCol.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // Helper extension để tránh deprecated withOpacity
 extension _ColorExt on Color {
-  Color op(double opacity) => withValues(alpha: opacity);
+  Color op(double opacity) => withOpacity(opacity);
 }
 
 class SOSPage extends StatefulWidget {
@@ -13,8 +13,6 @@ class SOSPage extends StatefulWidget {
 }
 
 class _SOSPageState extends State<SOSPage> {
-  static const bgDark = Color(0xFF120A08);
-  static const cardDark = Color(0xFF1E1412);
   static const sosRed = Color(0xFFB71C1C);
   static const ctaOrange = Color(0xFFFF6A00);
 
@@ -24,17 +22,18 @@ class _SOSPageState extends State<SOSPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(),
-            _buildFilters(),
+            _buildAppBar(context),
+            _buildFilters(context),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 children: [
                   _buildSOSCard(
+                    context: context,
                     blood: "O+",
                     hospital: "Bệnh viện Bạch Mai",
                     note: "Cần gấp 2 đơn vị • Tai nạn",
@@ -45,6 +44,7 @@ class _SOSPageState extends State<SOSPage> {
                   ),
                   const SizedBox(height: 16),
                   _buildSOSCard(
+                    context: context,
                     blood: "AB-",
                     hospital: "Bệnh viện Việt Đức",
                     note: "Cần tiểu cầu • Phẫu thuật",
@@ -56,6 +56,7 @@ class _SOSPageState extends State<SOSPage> {
                   ),
                   const SizedBox(height: 16),
                   _buildSOSCard(
+                    context: context,
                     blood: "A+",
                     hospital: "Bệnh viện K",
                     note: "Thiếu máu nhóm hiếm",
@@ -67,6 +68,7 @@ class _SOSPageState extends State<SOSPage> {
                   ),
                   const SizedBox(height: 16),
                   _buildSOSCard(
+                    context: context,
                     blood: "B+",
                     hospital: "Bệnh viện 108",
                     note: "Đã đủ số lượng",
@@ -87,7 +89,9 @@ class _SOSPageState extends State<SOSPage> {
   }
 
   // ================= APP BAR =================
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context) {
+    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Row(
@@ -95,17 +99,17 @@ class _SOSPageState extends State<SOSPage> {
         children: [
           GestureDetector(
              onTap: () => Navigator.pop(context),
-             child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+             child: Icon(Icons.arrow_back, color: textTitleCol, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "SOS Khẩn cấp",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textTitleCol,
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                   ),
@@ -139,10 +143,10 @@ class _SOSPageState extends State<SOSPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.op(0.06),
+              color: textTitleCol.op(0.06),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.search, color: Colors.white70, size: 20),
+            child: Icon(Icons.search, color: textTitleCol.op(0.7), size: 20),
           )
         ],
       ),
@@ -150,7 +154,10 @@ class _SOSPageState extends State<SOSPage> {
   }
 
   // ================= FILTERS =================
-  Widget _buildFilters() {
+  Widget _buildFilters(BuildContext context) {
+    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    var cardCol = Theme.of(context).cardColor;
+
     return SizedBox(
       height: 40,
       child: ListView.separated(
@@ -171,10 +178,10 @@ class _SOSPageState extends State<SOSPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected ? ctaOrange : cardDark,
+                color: isSelected ? ctaOrange : cardCol,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: isSelected ? Colors.transparent : Colors.white.op(0.1),
+                  color: isSelected ? Colors.transparent : textTitleCol.op(0.1),
                 ),
               ),
               alignment: Alignment.center,
@@ -184,14 +191,14 @@ class _SOSPageState extends State<SOSPage> {
                     Icon(
                       Icons.near_me,
                       size: 14,
-                      color: isSelected ? Colors.white : Colors.white70,
+                      color: isSelected ? Colors.white : textTitleCol.op(0.7),
                     ),
                     const SizedBox(width: 6),
                   ],
                   Text(
                     filters[index],
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
+                      color: isSelected ? Colors.white : textTitleCol.op(0.7),
                       fontWeight:
                           isSelected ? FontWeight.w800 : FontWeight.w600,
                       fontSize: 13,
@@ -208,6 +215,7 @@ class _SOSPageState extends State<SOSPage> {
 
   // ================= SOS CARD FULL WIDTH =================
   Widget _buildSOSCard({
+    required BuildContext context,
     required String blood,
     required String hospital,
     required String note,
@@ -217,15 +225,18 @@ class _SOSPageState extends State<SOSPage> {
     List<Color>? mapColors,
     required bool isActive,
   }) {
+    var textTitleCol = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    var cardCol = Theme.of(context).cardColor;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: cardDark,
+        color: cardCol,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.op(0.08)),
+        border: Border.all(color: textTitleCol.op(0.08)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.op(0.35),
+            color: Colors.black.op(0.1),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -240,6 +251,7 @@ class _SOSPageState extends State<SOSPage> {
             imagePath: imagePath,
             mapColors: mapColors,
             isActive: isActive,
+            textTitleCol: textTitleCol,
           ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -251,7 +263,7 @@ class _SOSPageState extends State<SOSPage> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isActive ? Colors.white : Colors.white.op(0.6),
+                    color: isActive ? textTitleCol : textTitleCol.op(0.6),
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
@@ -262,7 +274,7 @@ class _SOSPageState extends State<SOSPage> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isActive ? ctaOrange : Colors.white.op(0.4),
+                    color: isActive ? ctaOrange : textTitleCol.op(0.4),
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -271,7 +283,7 @@ class _SOSPageState extends State<SOSPage> {
                 Row(
                   children: [
                     Icon(Icons.near_me,
-                        size: 14, color: Colors.white.op(0.4)),
+                        size: 14, color: textTitleCol.op(0.4)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -279,7 +291,7 @@ class _SOSPageState extends State<SOSPage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white.op(0.4),
+                          color: textTitleCol.op(0.4),
                           fontSize: 12,
                         ),
                       ),
@@ -289,17 +301,18 @@ class _SOSPageState extends State<SOSPage> {
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
-                  height: 46,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isActive ? ctaOrange : Colors.white.op(0.1),
+                          isActive ? ctaOrange : textTitleCol.op(0.1),
                       foregroundColor:
-                          isActive ? Colors.white : Colors.white.op(0.4),
+                          isActive ? Colors.white : textTitleCol.op(0.4),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 0),
+                      minimumSize: const Size(double.infinity, 46),
                     ),
                     onPressed: isActive ? () {} : null,
                     child: isActive
@@ -336,6 +349,7 @@ class _SOSPageState extends State<SOSPage> {
     String? imagePath,
     List<Color>? mapColors,
     required bool isActive,
+    required Color textTitleCol,
   }) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
