@@ -9,6 +9,7 @@ import '../../core/api/sos_service.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/theme_provider.dart';
 import 'edit_profile_screen.dart';
+import '../notification/notification_settings_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -373,7 +374,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     if (updated == true) _loadUser();
                   }),
                   Divider(color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.05), height: 1, indent: 56),
-                  _buildListTile(context, Icons.notifications_none, Colors.purpleAccent, "Cài đặt thông báo", onTap: () {}),
+                  _buildListTile(context, Icons.notifications_none, Colors.purpleAccent, "Cài đặt thông báo", onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationSettingsScreen()));
+                  }),
                 ],
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../core/theme/app_colors.dart';
 import '../sos/sos_page.dart';
 import '../sos/sos_form_page.dart';
@@ -111,6 +112,7 @@ class _HomePageState extends State<_HomePage> {
   String? _phone;
   final _authService = AuthService();
   int _unreadCount = 0;
+  Timer? _notifTimer;
   
   List<dynamic> _activeSosList = [];
   bool _isLoadingSos = true;
@@ -123,6 +125,14 @@ class _HomePageState extends State<_HomePage> {
     _loadUserData();
     _loadActiveSos();
     _loadUnreadCount();
+    // Auto-refresh notification badge every 30 seconds
+    _notifTimer = Timer.periodic(const Duration(seconds: 30), (_) => _loadUnreadCount());
+  }
+
+  @override
+  void dispose() {
+    _notifTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUnreadCount() async {

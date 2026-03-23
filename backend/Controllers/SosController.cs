@@ -40,25 +40,32 @@ public class SosController : ControllerBase
         };
 
         _context.SosRequests.Add(sosRequest);
+        await _context.SaveChangesAsync(); // save SOS first
 
-        // Notify all other users about new SOS
-        var allUserIds = await _context.Users
-            .Where(u => u.Id != userId && u.PhoneNumber != "admin")
-            .Select(u => u.Id)
-            .ToListAsync();
-
-        foreach (var targetId in allUserIds)
+        // Broadcast notifications to all other users (non-critical)
+        try
         {
-            _context.Notifications.Add(new Notification
-            {
-                UserId = targetId,
-                Title = $"🆘 SOS khẩn cấp - Nhóm {request.BloodType}",
-                Body = $"Cần máu gấp tại {request.Location}. Lý do: {request.Reason}",
-                Type = "sos"
-            });
-        }
+            var allUserIds = await _context.Users
+                .Where(u => u.Id != userId && u.PhoneNumber != "admin")
+                .Select(u => u.Id)
+                .ToListAsync();
 
-        await _context.SaveChangesAsync();
+            foreach (var targetId in allUserIds)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = targetId,
+                    Title = $"🆘 SOS khẩn cấp - Nhóm {request.BloodType}",
+                    Body = $"Cần máu gấp tại {request.Location}. Lý do: {request.Reason}",
+                    Type = "sos"
+                });
+            }
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Notification broadcast failed (non-critical): {ex.Message}");
+        }
 
         return Ok(new { Message = "SOS request created successfully", Id = sosRequest.Id });
     }
