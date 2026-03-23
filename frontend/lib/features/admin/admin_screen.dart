@@ -218,6 +218,104 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
     } catch (_) { _showSnack('Lỗi khi xóa'); }
   }
 
+  Future<void> _showBloodVolumeDialog(dynamic user) async {
+    final vol = (user['bloodVolume'] as num?)?.toDouble() ?? 0.0;
+    double newVol = vol;
+    final ctrl = TextEditingController(text: vol.toStringAsFixed(0));
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1A2E),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🩸 Chỉnh số đơn vị máu', style: TextStyle(color: Colors.white, fontSize: 16)),
+              Text(user['phoneNumber'], style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Quick adjust buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final delta in [-350, -100, -50])
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        onPressed: () {
+                          newVol = (newVol + delta).clamp(0, 99999);
+                          ctrl.text = newVol.toStringAsFixed(0);
+                          setS(() {});
+                        },
+                        child: Text('${delta}ml', style: const TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final delta in [50, 100, 350])
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(foregroundColor: Colors.greenAccent, side: const BorderSide(color: Colors.greenAccent), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        onPressed: () {
+                          newVol = (newVol + delta).clamp(0, 99999);
+                          ctrl.text = newVol.toStringAsFixed(0);
+                          setS(() {});
+                        },
+                        child: Text('+${delta}ml', style: const TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Manual input
+              TextField(
+                controller: ctrl,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  filled: true, fillColor: const Color(0xFF0D0D1A),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  suffixText: 'ml',
+                  suffixStyle: const TextStyle(color: Colors.grey),
+                  label: const Text('Tổng thể tích máu', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                ),
+                onChanged: (v) => newVol = double.tryParse(v) ?? newVol,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              icon: const Icon(Icons.save, size: 16),
+              label: const Text('Lưu'),
+              onPressed: () async {
+                try {
+                  await _dio.put('/admin/users/${user['id']}/blood-volume', options: _authOptions, data: {'bloodVolume': newVol});
+                  Navigator.pop(ctx);
+                  _showSnack('Đã cập nhật: ${newVol.toStringAsFixed(0)} ml');
+                  _fetchUsers();
+                } catch (_) { _showSnack('Lỗi cập nhật'); }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _updateSosStatus(String id, String currentStatus) async {
     final statuses = ['Pending', 'Fulfilled', 'Cancelled'];
     String selected = currentStatus;
@@ -426,9 +524,20 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                       decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(12)),
                       child: const Text('ADMIN', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                     )
-                  : IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                      onPressed: () => _deleteUser(u['id'], u['phoneNumber']),
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.water_drop, color: Colors.redAccent),
+                          tooltip: 'Chỉnh đơn vị máu',
+                          onPressed: () => _showBloodVolumeDialog(u),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.grey),
+                          tooltip: 'Xóa người dùng',
+                          onPressed: () => _deleteUser(u['id'], u['phoneNumber']),
+                        ),
+                      ],
                     ),
               ),
             );
