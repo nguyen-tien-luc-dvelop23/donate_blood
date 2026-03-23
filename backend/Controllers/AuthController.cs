@@ -94,6 +94,61 @@ public class AuthController : ControllerBase
         return Ok(new { Message = "Profile updated successfully" });
     }
 
+    [Authorize]
+    [HttpPost("avatar")]
+    public async Task<IActionResult> UploadAvatar(IFormFile file)
+    {
+        if (file == null || file.Length == 0) return BadRequest("No file uploaded.");
+        if (file.Length > 5 * 1024 * 1024) return BadRequest("File size cannot exceed 5MB.");
+        
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+        var avatarData = memoryStream.ToArray();
+
+        var avatar = await _context.UserAvatars.FindAsync(userIdString);
+        if (avatar == null)
+        {
+            avatar = new UserAvatar 
+            { 
+                UserId = userIdString, 
+                AvatarData = avatarData,
+                ContentType = file.ContentType
+            };
+            _context.UserAvatars.Add(avatar);
+        }
+        else
+        {
+            avatar.AvatarData = avatarData;
+            avatar.ContentType = file.ContentType;
+            _context.UserAvatars.Update(avatar);
+        }
+
+        var user = await _context.Users.FindAsync(userIdString);
+        if (user != null)
+        {
+            var req = HttpContext.Request;
+            var baseUrl = $"{req.Scheme}://{req.Host}{req.PathBase}";
+            user.AvatarUrl = $"{baseUrl}/api/Auth/avatar/{userIdString}";
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { AvatarUrl = user?.AvatarUrl, Message = "Avatar updated successfully" });
+    }
+
+    [HttpGet("avatar/{userId}")]
+    public async Task<IActionResult> GetAvatar(string userId)
+    {
+        var avatar = await _context.UserAvatars.FindAsync(userId);
+        if (avatar == null || avatar.AvatarData == null || avatar.AvatarData.Length == 0)
+            return NotFound();
+
+        return File(avatar.AvatarData, avatar.ContentType ?? "image/jpeg");
+    }
+
     [HttpPost("send-otp")]
     public IActionResult SendOtp([FromBody] OtpRequest request)
     {

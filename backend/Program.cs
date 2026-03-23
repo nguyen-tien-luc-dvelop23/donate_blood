@@ -136,6 +136,16 @@ _ = Task.Run(async () => {
                 ");
 
                 context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS `UserAvatars` (
+                        `UserId` char(36) NOT NULL,
+                        `AvatarData` longblob NOT NULL,
+                        `ContentType` varchar(50) NOT NULL DEFAULT 'image/jpeg',
+                        PRIMARY KEY (`UserId`),
+                        CONSTRAINT `FK_UserAvatars_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                ");
+
+                context.Database.ExecuteSqlRaw(@"
                     CREATE TABLE IF NOT EXISTS `SosRequests` (
                         `Id` char(36) NOT NULL,
                         `UserId` char(36) NOT NULL,

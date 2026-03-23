@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<DonationRecord> DonationRecords { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<UserAvatar> UserAvatars { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
