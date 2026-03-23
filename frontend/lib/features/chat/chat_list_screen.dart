@@ -64,6 +64,15 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
     }).toList();
   }
 
+  List<dynamic> get _filteredConversations {
+    if (_search.isEmpty) return _conversations;
+    return _conversations.where((c) {
+      final name = (c['userName'] as String? ?? '').toLowerCase();
+      final phone = (c['userPhone'] as String? ?? '').toLowerCase();
+      return name.contains(_search.toLowerCase()) || phone.contains(_search.toLowerCase());
+    }).toList();
+  }
+
   String _timeAgo(String? dateStr) {
     if (dateStr == null) return '';
     final dt = DateTime.tryParse(dateStr)?.toLocal();
@@ -116,15 +125,21 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
         ),
       ),
       body: Column(children: [
-        // Search bar
+        // Search bar — auto-switch to Members tab when searching
         Container(
           color: const Color(0xFF1A1A2E),
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: TextField(
-            onChanged: (v) => setState(() => _search = v),
+            onChanged: (v) {
+              setState(() => _search = v);
+              // Auto-switch to Members tab when typing
+              if (v.isNotEmpty && _tabCtrl.index == 0) {
+                _tabCtrl.animateTo(1);
+              }
+            },
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'Tìm người dùng...',
+              hintText: 'Tìm thành viên...',
               hintStyle: const TextStyle(color: Colors.grey),
               prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
               filled: true, fillColor: const Color(0xFF0D0D1A),
@@ -140,7 +155,7 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
               // Tab 1: Conversations
               _loadingConvs
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF4500)))
-                : _conversations.isEmpty
+                : _filteredConversations.isEmpty
                   ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       const Icon(Icons.chat_bubble_outline, size: 60, color: Colors.grey),
                       const SizedBox(height: 12),
@@ -152,10 +167,10 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
                       onRefresh: _loadConversations,
                       color: const Color(0xFFFF4500),
                       child: ListView.separated(
-                        itemCount: _conversations.length,
+                        itemCount: _filteredConversations.length,
                         separatorBuilder: (_, __) => Divider(color: textCol.withOpacity(0.05), height: 1, indent: 70),
                         itemBuilder: (ctx, i) {
-                          final conv = _conversations[i];
+                          final conv = _filteredConversations[i];
                           final avatar = conv['userAvatar'] as String? ?? '';
                           final name = (conv['userName'] as String? ?? '').isNotEmpty ? conv['userName'] : conv['userPhone'];
                           final blood = conv['userBloodType'] as String? ?? '';

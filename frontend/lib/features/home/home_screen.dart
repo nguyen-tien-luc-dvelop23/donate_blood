@@ -110,6 +110,7 @@ class _HomePageState extends State<_HomePage> {
   bool _isReadyToDonate = true;
   String? _fullName;
   String? _phone;
+  int _donationCount = 0;
   final _authService = AuthService();
   int _unreadCount = 0;
   Timer? _notifTimer;
@@ -171,10 +172,12 @@ class _HomePageState extends State<_HomePage> {
   Future<void> _loadUserData() async {
     final name = await _authService.getLoggedName();
     final phone = await _authService.getLoggedPhone();
+    final count = await _authService.getLoggedDonationCount();
     if (mounted) {
       setState(() {
         _fullName = name;
         _phone = phone;
+        _donationCount = count;
       });
     }
   }
@@ -397,7 +400,11 @@ class _HomePageState extends State<_HomePage> {
                           const Icon(Icons.water_drop_outlined, color: Color(0xFFFFB74D), size: 20),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text('Bạn đã hiến máu 3 lần. Xin cảm ơn', style: TextStyle(color: textSubCol, fontSize: 12)),
+                            child: Text(
+                              _donationCount > 0
+                                ? 'Bạn đã hiến máu $_donationCount lần. Xin cảm ơn! ❤️'
+                                : 'Hãy hiến máu để cứu người!',
+                              style: TextStyle(color: textSubCol, fontSize: 12)),
                           ),
                           Icon(Icons.favorite_border, color: Colors.red[300], size: 16),
                         ],
