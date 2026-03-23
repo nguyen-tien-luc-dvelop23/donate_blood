@@ -148,59 +148,130 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
 
   Future<void> _showAddDonationDialog() async {
     if (_users.isEmpty) { _showSnack('Chưa có danh sách người dùng'); return; }
-    dynamic selectedUser = _users.first;
-    final hospitalCtrl = TextEditingController();
+
+    // Filter non-admin users for donor selection
+    final donorList = _users.where((u) => u['phoneNumber'] != 'admin').toList();
+    if (donorList.isEmpty) { _showSnack('Chưa có người dùng nào để chọn'); return; }
+
+    dynamic selectedUser = donorList.first;
+    dynamic selectedSos; // SOS request = hospital source
     final volumeCtrl = TextEditingController(text: '350');
+
+    // Pending SOS list for hospital selection
+    final pendingSos = _sosList.where((s) => s['status'] == 'Pending').toList();
 
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => AlertDialog(
           backgroundColor: const Color(0xFF1A1A2E),
-          title: const Text('Xác nhận hiến máu', style: TextStyle(color: Colors.white)),
+          title: const Text('✅ Xác nhận hiến máu', style: TextStyle(color: Colors.white)),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
+              // DONOR: from Users DB
               DropdownButtonFormField<dynamic>(
                 value: selectedUser,
+                isExpanded: true,
                 dropdownColor: const Color(0xFF1A1A2E),
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
-                  labelText: 'Người hiến máu',
-                  labelStyle: const TextStyle(color: Colors.grey),
+                  labelText: '👤 Người hiến máu (từ DB)',
+                  labelStyle: const TextStyle(color: Colors.redAccent, fontSize: 12),
                   filled: true, fillColor: const Color(0xFF0D0D1A),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                items: _users.where((u) => u['phoneNumber'] != 'admin').map<DropdownMenuItem<dynamic>>((u) =>
-                  DropdownMenuItem(value: u, child: Text('${u['phoneNumber']} - ${u['fullName'] ?? ''} (${u['bloodType']})'))).toList(),
+                items: donorList.map<DropdownMenuItem<dynamic>>((u) =>
+                  DropdownMenuItem(value: u, child: Text(
+                    '${u['phoneNumber']}${(u['fullName'] as String? ?? '').isNotEmpty ? ' (${u['fullName']})' : ''} • ${u['bloodType']}',
+                    overflow: TextOverflow.ellipsis,
+                  ))).toList(),
                 onChanged: (v) => setS(() => selectedUser = v),
               ),
-              const SizedBox(height: 8),
-              _field(hospitalCtrl, 'Tên bệnh viện / cơ sở'),
-              const SizedBox(height: 8),
-              _field(volumeCtrl, 'Thể tích máu (ml)', keyboardType: TextInputType.number),
+              const SizedBox(height: 12),
+
+              // HOSPITAL: from SOS Requests DB
+              if (pendingSos.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: const Color(0xFF0D0D1A), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.orange.withOpacity(0.4))),
+                  child: const Text('⚠️ Không có SOS đang chờ.\nNhập tên bệnh viện thủ công bên dưới.', style: TextStyle(color: Colors.orange, fontSize: 12)),
+                )
+              else
+                DropdownButtonFormField<dynamic>(
+                  value: selectedSos,
+                  isExpanded: true,
+                  dropdownColor: const Color(0xFF1A1A2E),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    labelText: '🏥 Bệnh viện (từ SOS khẩn cấp)',
+                    labelStyle: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                    filled: true, fillColor: const Color(0xFF0D0D1A),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  hint: const Text('Chọn yêu cầu SOS / bệnh viện', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  items: pendingSos.map<DropdownMenuItem<dynamic>>((s) =>
+                    DropdownMenuItem(value: s, child: Text(
+                      '${s['location']} • ${s['bloodType']} (${s['reason']})',
+                      overflow: TextOverflow.ellipsis,
+                    ))).toList(),
+                  onChanged: (v) => setS(() => selectedSos = v),
+                ),
+
+              const SizedBox(height: 12),
+              // Show selected hospital info
+              if (selectedSos != null)
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green.withOpacity(0.3))),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('🏥 ${selectedSos['location']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text('🩸 Nhóm máu cần: ${selectedSos['bloodType']}', style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+                    Text('📋 Lý do: ${selectedSos['reason']}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  ]),
+                ),
+
+              const SizedBox(height: 12),
+              _field(volumeCtrl, '🩸 Thể tích máu (ml)', keyboardType: TextInputType.number),
+
+              if (selectedSos != null) ...[
+                const SizedBox(height: 8),
+                const Row(children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 14),
+                  SizedBox(width: 4),
+                  Expanded(child: Text('SOS này sẽ được đánh dấu "Fulfilled" sau khi xác nhận', style: TextStyle(color: Colors.green, fontSize: 11))),
+                ]),
+              ],
             ]),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
-            ElevatedButton(
+            ElevatedButton.icon(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              icon: const Icon(Icons.check_circle, size: 16),
+              label: const Text('Xác nhận'),
               onPressed: () async {
-                if (selectedUser == null || hospitalCtrl.text.isEmpty) return;
+                if (selectedUser == null) { _showSnack('Chọn người hiến máu'); return; }
+                if (pendingSos.isNotEmpty && selectedSos == null) { _showSnack('Chọn bệnh viện từ SOS'); return; }
+                final hospitalName = selectedSos != null ? (selectedSos['location'] as String) : 'Không xác định';
                 try {
                   await _dio.post('/admin/donations', options: _authOptions, data: {
                     'userId': selectedUser['id'],
-                    'hospitalName': hospitalCtrl.text.trim(),
+                    'hospitalName': hospitalName,
                     'bloodVolumeMl': double.tryParse(volumeCtrl.text) ?? 350,
                   });
+                  // Mark SOS as Fulfilled
+                  if (selectedSos != null) {
+                    await _dio.put('/admin/sos/${selectedSos['id']}/status', options: _authOptions, data: {'status': 'Fulfilled'});
+                  }
                   Navigator.pop(ctx);
-                  _showSnack('Đã xác nhận hiến máu thành công');
+                  _showSnack('✅ Xác nhận hiến máu thành công tại $hospitalName');
                   _fetchDonations();
                   _fetchUsers();
+                  _fetchSos();
                 } on DioException catch (e) {
                   _showSnack(e.response?.data?.toString() ?? 'Lỗi');
                 }
               },
-              child: const Text('Xác nhận'),
             ),
           ],
         ),
