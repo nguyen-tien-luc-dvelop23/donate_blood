@@ -133,19 +133,24 @@ public class ChatController : ControllerBase
             Content = request.Content.Trim()
         };
 
-        _context.ChatMessages.Add(msg);
-
-        // Notify recipient
         try {
-            _context.Notifications.Add(new Notification {
-                UserId = request.RecipientId,
-                Title = "💬 Tin nhắn mới",
-                Body = $"Bạn có tin nhắn mới từ {(await _context.Users.FindAsync(myId))?.FullName ?? "someone"}",
-                Type = "chat"
-            });
-        } catch { /* notifications table may not exist yet */ }
+            _context.ChatMessages.Add(msg);
 
-        await _context.SaveChangesAsync();
+            // Notify recipient
+            try {
+                _context.Notifications.Add(new Notification {
+                    UserId = request.RecipientId,
+                    Title = "💬 Tin nhắn mới",
+                    Body = $"Bạn có tin nhắn mới từ {(await _context.Users.FindAsync(myId))?.FullName ?? "someone"}",
+                    Type = "chat"
+                });
+            } catch { /* notifications table may not exist yet */ }
+
+            await _context.SaveChangesAsync();
+        } catch (Exception ex) {
+            Console.WriteLine($"SendDm error: {ex.Message}");
+            return BadRequest("Máy chủ đang cập nhật dữ liệu chat. Hãy thử lại sau vài phút!");
+        }
 
         var sender = await _context.Users.FindAsync(myId);
         return Ok(new {

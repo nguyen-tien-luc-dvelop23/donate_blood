@@ -179,7 +179,7 @@ _ = Task.Run(async () => {
                 try {
                     var colExists = context.Database
                         .SqlQueryRaw<int>(
-                            "SELECT COUNT(*) AS `Value` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ChatMessages' AND COLUMN_NAME = 'RecipientId'")
+                            "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ChatMessages' AND COLUMN_NAME = 'RecipientId'")
                         .FirstOrDefault();
                     if (colExists == 0) {
                         context.Database.ExecuteSqlRaw("ALTER TABLE `ChatMessages` ADD COLUMN `RecipientId` char(36) NULL;");
