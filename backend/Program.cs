@@ -166,12 +166,19 @@ _ = Task.Run(async () => {
                     CREATE TABLE IF NOT EXISTS `ChatMessages` (
                         `Id` char(36) NOT NULL,
                         `SenderId` char(36) NOT NULL,
+                        `RecipientId` char(36) NULL,
                         `Content` longtext NOT NULL,
                         `CreatedAt` datetime(6) NOT NULL,
                         PRIMARY KEY (`Id`),
-                        CONSTRAINT `FK_ChatMessages_Users_SenderId` FOREIGN KEY (`SenderId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+                        CONSTRAINT `FK_ChatMessages_Users_SenderId` FOREIGN KEY (`SenderId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE,
+                        CONSTRAINT `FK_ChatMessages_Users_RecipientId` FOREIGN KEY (`RecipientId`) REFERENCES `Users` (`Id`) ON DELETE SET NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
                 ");
+
+                // Add RecipientId if upgrading from old schema
+                try {
+                    context.Database.ExecuteSqlRaw("ALTER TABLE `ChatMessages` ADD COLUMN IF NOT EXISTS `RecipientId` char(36) NULL;");
+                } catch { }
 
                 context.Database.ExecuteSqlRaw(@"
                     CREATE TABLE IF NOT EXISTS `Notifications` (

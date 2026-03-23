@@ -10,7 +10,7 @@ import '../../core/api/sos_service.dart';
 import '../history/history_page.dart';
 import '../honor/honor_screen.dart';
 import '../sos/confirm_support_screen.dart';
-import '../chat/chat_screen.dart';
+import '../chat/chat_list_screen.dart';
 import '../notification/notification_screen.dart';
 import '../../core/api/notification_service.dart';
 
@@ -447,7 +447,7 @@ class _HomePageState extends State<_HomePage> {
                         icon: Icons.chat_bubble_outline,
                         label: 'Trò chuyện',
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatListScreen()));
                         },
                       ),
                     ),

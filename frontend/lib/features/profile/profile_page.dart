@@ -167,7 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    "ID: #${_phone?.substring(0, 4) ?? '0000'}84",
+                    "ID: #${(_phone != null && _phone!.length >= 4) ? _phone!.substring(0, 4) : (_phone ?? '0000')}",
                     style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ),
