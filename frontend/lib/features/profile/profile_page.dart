@@ -57,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!'), backgroundColor: Colors.green));
     } else if (mounted) {
       setState(() => _isUploadingAvatar = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tải ảnh lên thất bại. Ảnh phải nhỏ hơn 20MB.'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tải ảnh lên thất bại. Ảnh phải nhỏ hơn 6MB.'), backgroundColor: Colors.red));
     }
   }
 

@@ -46,7 +46,7 @@ public class SosController : ControllerBase
         try
         {
             var allUserIds = await _context.Users
-                .Where(u => u.Id != userId && u.PhoneNumber != "admin")
+                .Where(u => u.Id != userId)
                 .Select(u => u.Id)
                 .ToListAsync();
 
