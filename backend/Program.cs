@@ -24,7 +24,7 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Configure MySQL Database
+// Configure PostgreSQL Database
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 var mysqlHost = Environment.GetEnvironmentVariable("MYSQLHOST");
 var mysqlPort = Environment.GetEnvironmentVariable("MYSQLPORT");
@@ -36,17 +36,18 @@ string connectionString;
 
 if (!string.IsNullOrEmpty(mysqlHost))
 {
-    // Added AllowPublicKeyRetrieval=True for MySQL 8+ compatibility through proxies.
-    connectionString = $"Server={mysqlHost};Port={mysqlPort ?? "3306"};Database={mysqlDb ?? "railway"};Uid={mysqlUser};Pwd={mysqlPass};SslMode=None;Connect Timeout=300;Default Command Timeout=300;AllowUserVariables=True;Pooling=False;AllowPublicKeyRetrieval=True;";
-    Console.WriteLine($"DB CONFIG: Attempting connection via MYSQLHOST [Host]: {mysqlHost}, [Port]: {mysqlPort ?? "3306"}");
+    // PostgreSQL Connection String
+    connectionString = $"Host={mysqlHost};Port={mysqlPort ?? "5432"};Database={mysqlDb ?? "railway"};Username={mysqlUser ?? "postgres"};Password={mysqlPass};SSL Mode=Require;Trust Server Certificate=true;";
+    Console.WriteLine($"DB CONFIG: Attempting connection via MYSQLHOST [Host]: {mysqlHost}, [Port]: {mysqlPort ?? "5432"}");
 }
 else if (!string.IsNullOrEmpty(databaseUrl))
 {
+    // Railway's DATABASE_URL: postgresql://user:pass@host:port/db
     var uri = new Uri(databaseUrl);
     var userInfo = uri.UserInfo.Split(':');
-    var port = uri.Port == -1 ? 3306 : uri.Port;
+    var port = uri.Port == -1 ? 5432 : uri.Port;
     var database = uri.AbsolutePath.TrimStart('/');
-    connectionString = $"Server={uri.Host};Port={port};Database={database};Uid={userInfo[0]};Pwd={userInfo[1]};SslMode=None;Connect Timeout=300;Default Command Timeout=300;AllowUserVariables=True;Pooling=False;AllowPublicKeyRetrieval=True;";
+    connectionString = $"Host={uri.Host};Port={port};Database={database};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true;";
     Console.WriteLine($"DB CONFIG: Attempting connection via DATABASE_URL [Host]: {uri.Host}, [Port]: {port}");
 }
 else
@@ -56,11 +57,11 @@ else
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 35)), mySqlOptions => 
+    options.UseNpgsql(connectionString, npgsqlOptions => 
     {
-        mySqlOptions.CommandTimeout(300);
-        // Enable transient error resiliency for cloud environments
-        mySqlOptions.EnableRetryOnFailure(
+        npgsqlOptions.CommandTimeout(300);
+        // Enable transient error resiliency
+        npgsqlOptions.EnableRetryOnFailure(
             maxRetryCount: 10,
             maxRetryDelay: TimeSpan.FromSeconds(30),
             errorNumbersToAdd: null);
@@ -119,51 +120,54 @@ _ = Task.Run(async () => {
         {
             try
             {
-                Console.WriteLine($"BACKGROUND: DB Initialization Attempt {i} of {maxRetries}...");
+                Console.WriteLine($"BACKGROUND: DB Initialization Attempt {i} of {maxRetries} (PostgreSQL)...");
                 context.Database.SetCommandTimeout(300);
 
-                // Create tables if not exists
+                // Create tables if not exists (PostgreSQL Syntax)
                 context.Database.ExecuteSqlRaw(@"
-                    CREATE TABLE IF NOT EXISTS `Users` (
-                        `Id` char(36) NOT NULL,
-                        `PhoneNumber` varchar(20) NOT NULL,
-                        `PasswordHash` longtext NOT NULL,
-                        `FullName` varchar(100) NOT NULL DEFAULT '',
-                        `BloodType` varchar(10) NOT NULL,
-                        `MedicalInfo` longtext NOT NULL,
-                        `BloodVolume` double NOT NULL DEFAULT 0.0,
-                        `AvatarUrl` varchar(500) NOT NULL DEFAULT '',
-                        `CreatedAt` datetime(6) NOT NULL,
-                        PRIMARY KEY (`Id`),
-                        UNIQUE KEY `IX_Users_PhoneNumber` (`PhoneNumber`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                    CREATE TABLE IF NOT EXISTS ""Users"" (
+                        ""Id"" uuid NOT NULL,
+                        ""PhoneNumber"" varchar(20) NOT NULL,
+                        ""PasswordHash"" text NOT NULL,
+                        ""FullName"" varchar(100) NOT NULL DEFAULT '',
+                        ""BloodType"" varchar(10) NOT NULL,
+                        ""MedicalInfo"" text NOT NULL,
+                        ""BloodVolume"" double precision NOT NULL DEFAULT 0.0,
+                        ""AvatarUrl"" varchar(500) NOT NULL DEFAULT '',
+                        ""CreatedAt"" timestamptz NOT NULL,
+                        PRIMARY KEY (""Id"")
+                    );
                 ");
 
                 context.Database.ExecuteSqlRaw(@"
-                    CREATE TABLE IF NOT EXISTS `SosRequests` (
-                        `Id` char(36) NOT NULL,
-                        `UserId` char(36) NOT NULL,
-                        `BloodType` varchar(10) NOT NULL,
-                        `Location` varchar(255) NOT NULL,
-                        `Reason` varchar(100) NOT NULL,
-                        `Description` longtext NOT NULL,
-                        `Status` varchar(20) NOT NULL,
-                        `CreatedAt` datetime(6) NOT NULL,
-                        PRIMARY KEY (`Id`),
-                        CONSTRAINT `FK_SosRequests_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Users_PhoneNumber"" ON ""Users"" (""PhoneNumber"");
                 ");
 
                 context.Database.ExecuteSqlRaw(@"
-                    CREATE TABLE IF NOT EXISTS `DonationRecords` (
-                        `Id` char(36) NOT NULL,
-                        `UserId` char(36) NOT NULL,
-                        `HospitalName` varchar(255) NOT NULL,
-                        `DonationDate` datetime(6) NOT NULL,
-                        `CreatedAt` datetime(6) NOT NULL,
-                        PRIMARY KEY (`Id`),
-                        CONSTRAINT `FK_DonationRecords_Users` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+                    CREATE TABLE IF NOT EXISTS ""SosRequests"" (
+                        ""Id"" uuid NOT NULL,
+                        ""UserId"" uuid NOT NULL,
+                        ""BloodType"" varchar(10) NOT NULL,
+                        ""Location"" varchar(255) NOT NULL,
+                        ""Reason"" varchar(100) NOT NULL,
+                        ""Description"" text NOT NULL,
+                        ""Status"" varchar(20) NOT NULL,
+                        ""CreatedAt"" timestamptz NOT NULL,
+                        PRIMARY KEY (""Id""),
+                        CONSTRAINT ""FK_SosRequests_Users_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
+                    );
+                ");
+
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""DonationRecords"" (
+                        ""Id"" uuid NOT NULL,
+                        ""UserId"" uuid NOT NULL,
+                        ""HospitalName"" varchar(255) NOT NULL,
+                        ""DonationDate"" timestamptz NOT NULL,
+                        ""CreatedAt"" timestamptz NOT NULL,
+                        PRIMARY KEY (""Id""),
+                        CONSTRAINT ""FK_DonationRecords_Users"" FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
+                    );
                 ");
 
                 // Seed admin if not exists
@@ -178,7 +182,7 @@ _ = Task.Run(async () => {
                     context.SaveChanges();
                 }
 
-                Console.WriteLine("BACKGROUND: DB Initialization Successful.");
+                Console.WriteLine("BACKGROUND: DB Initialization Successful (PostgreSQL).");
                 break;
             }
             catch (Exception ex)
