@@ -88,12 +88,11 @@ builder.Services.AddAuthentication(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Enable Swagger in all environments for debugging
+app.UseSwagger();
+app.UseSwaggerUI();
 
+// CORS must be first in pipeline
 app.UseCors("AllowAll");
 
 // Remove UseHttpsRedirection in Docker environments behind reverse proxies unless configured
