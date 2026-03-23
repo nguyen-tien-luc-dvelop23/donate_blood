@@ -86,6 +86,34 @@ class AuthService {
     }
   }
 
+  Future<String?> uploadAvatar(String filePath) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) return null;
+
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath),
+      });
+
+      final response = await _dio.post('/Auth/avatar', 
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        final avatarUrl = response.data['avatarUrl'];
+        if (avatarUrl != null) {
+          await prefs.setString('avatarUrl', avatarUrl);
+          return avatarUrl;
+        }
+      }
+    } catch (e) {
+      print('Upload avatar error: $e');
+    }
+    return null;
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');

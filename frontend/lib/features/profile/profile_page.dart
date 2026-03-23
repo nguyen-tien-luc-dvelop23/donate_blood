@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../auth/login/login_screen.dart';
 import '../admin/admin_screen.dart';
 import '../../core/api/auth_service.dart';
@@ -27,6 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
   int _donationCount = 0;
   int _sosCount = 0;
   bool _isReadyToDonate = true;
+  bool _isUploadingAvatar = false;
 
   final _authService = AuthService();
   final _donationService = DonationService();
@@ -36,6 +38,27 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadUser();
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final xFile = await picker.pickImage(source: ImageSource.gallery);
+    if (xFile == null) return;
+    
+    setState(() => _isUploadingAvatar = true);
+    final newUrl = await _authService.uploadAvatar(xFile.path);
+    
+    if (newUrl != null && mounted) {
+      // Append timestamp to bust NetworkImage cache
+      setState(() {
+        _avatarUrl = '$newUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+        _isUploadingAvatar = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!'), backgroundColor: Colors.green));
+    } else if (mounted) {
+      setState(() => _isUploadingAvatar = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tải ảnh lên thất bại. Phải nhỏ hơn 5MB.'), backgroundColor: Colors.red));
+    }
   }
 
   Future<void> _loadUser() async {
@@ -105,12 +128,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         backgroundImage: (_avatarUrl != null && _avatarUrl!.isNotEmpty)
                             ? NetworkImage(_avatarUrl!)
                             : null,
-                        child: (_avatarUrl == null || _avatarUrl!.isEmpty)
-                            ? Text(
-                                _fullName != null && _fullName!.isNotEmpty ? _fullName![0].toUpperCase() : '?',
-                                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.blueAccent),
-                              )
-                            : null,
+                        child: _isUploadingAvatar 
+                            ? const CircularProgressIndicator(color: Colors.blueAccent)
+                            : (_avatarUrl == null || _avatarUrl!.isEmpty)
+                                ? Text(
+                                    _fullName != null && _fullName!.isNotEmpty ? _fullName![0].toUpperCase() : '?',
+                                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                                  )
+                                : null,
                       ),
                     ),
                   ),
@@ -118,14 +143,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     bottom: 0,
                     right: 0,
                     child: GestureDetector(
-                      onTap: () async {
-                        final updated = await Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
-                        if (updated == true) _loadUser();
-                      },
+                      onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: _isUploadingAvatar ? Colors.grey : Colors.white,
                           shape: BoxShape.circle,
                           border: Border.all(color: const Color(0xFF1E1412), width: 2),
                         ),
