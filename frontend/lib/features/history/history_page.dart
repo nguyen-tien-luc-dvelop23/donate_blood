@@ -33,6 +33,12 @@ class _HistoryPageState extends State<HistoryPage> {
     _loadData();
   }
 
+  DateTime _parseLocalTime(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return DateTime.now();
+    if (!dateStr.endsWith('Z')) dateStr += 'Z';
+    return DateTime.parse(dateStr).toLocal();
+  }
+
   Future<void> _loadData() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -52,7 +58,7 @@ class _HistoryPageState extends State<HistoryPage> {
       for (var item in donationHistory) {
         items.add({
           'type': 'donation',
-          'date': DateTime.parse(item['donationDate']),
+          'date': _parseLocalTime(item['donationDate']?.toString()),
           'title': 'Hiến máu toàn phần',
           'subtitle': item['hospitalName'] ?? 'Không rõ địa điểm',
           'status': 'Thành công',
@@ -63,7 +69,7 @@ class _HistoryPageState extends State<HistoryPage> {
       for (var item in sosHistory) {
         items.add({
           'type': 'sos',
-          'date': DateTime.parse(item['createdAt']),
+          'date': _parseLocalTime(item['createdAt']?.toString()),
           'title': item['reason'] ?? 'Cần máu gấp',
           'subtitle': item['location'] ?? 'Không rõ địa điểm',
           'status': item['status'] == 'Pending' ? 'Đang gọi' : 'Đã hoàn thành',
