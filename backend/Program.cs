@@ -60,10 +60,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     {
         mySqlOptions.CommandTimeout(300);
         // Enable transient error resiliency for cloud environments
-        mySqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 10,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null);
+        mySqlOptions.EnableRetryOnFailure(10, TimeSpan.FromSeconds(30), null);
     });
 });
 
