@@ -357,7 +357,7 @@ class PlaceSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
   }
 
   @override
-  Widget buildResults(BuildContext context) => _buildSuggestions();
+  Widget buildResults(BuildContext context) => buildSuggestions(context);
 
   @override
   Widget buildSuggestions(BuildContext context) {
