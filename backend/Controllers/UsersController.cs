@@ -17,6 +17,29 @@ public class UsersController : ControllerBase
         _context = context;
     }
 
+    public class UpdateLocationDto
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
+    [HttpPut("location")]
+    public async Task<IActionResult> UpdateLocation([FromBody] UpdateLocationDto dto)
+    {
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            return Unauthorized();
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        user.Latitude = dto.Latitude;
+        user.Longitude = dto.Longitude;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { Message = "Location updated" });
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllUsers()
     {

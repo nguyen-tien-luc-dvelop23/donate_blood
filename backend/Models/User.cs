@@ -27,5 +27,8 @@ public class User
 
     public double BloodVolume { get; set; } = 0.0;
 
+    public double Latitude { get; set; } = 0.0;
+    public double Longitude { get; set; } = 0.0;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

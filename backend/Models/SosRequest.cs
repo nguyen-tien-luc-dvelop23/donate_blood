@@ -28,6 +28,9 @@ public class SosRequest
 
     public string Description { get; set; } = string.Empty;
 
+    public double Latitude { get; set; } = 0.0;
+    public double Longitude { get; set; } = 0.0;
+
     [Required]
     [MaxLength(20)]
     public string Status { get; set; } = "Pending"; // Pending, Fulfilled, Cancelled
