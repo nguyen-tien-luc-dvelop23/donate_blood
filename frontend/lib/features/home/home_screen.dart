@@ -141,6 +141,18 @@ class _HomePageState extends State<_HomePage> {
     if (mounted) setState(() => _unreadCount = (data['unreadCount'] as int? ?? 0));
   }
 
+  String _timeAgo(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return 'Vừa xong';
+    if (!dateStr.endsWith('Z')) dateStr += 'Z';
+    final dt = DateTime.tryParse(dateStr)?.toLocal();
+    if (dt == null) return 'Vừa xong';
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Vừa xong';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
+    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
+    return '${diff.inDays} ngày trước';
+  }
+
   Future<void> _loadActiveSos() async {
     final list = await _sosService.getActiveSos();
     if (list.isEmpty) {
@@ -337,11 +349,12 @@ class _HomePageState extends State<_HomePage> {
                             itemCount: _activeSosList.length,
                             itemBuilder: (context, index) {
                               final sos = _activeSosList[index];
+                              final timeStr = _timeAgo(sos['createdAt']?.toString());
                               return _buildSOSCard(
                                 bloodType: sos['bloodType']?.toString() ?? '?',
                                 hospitalName: sos['location']?.toString() ?? 'Chưa rõ',
                                 noteText: '${sos['reason']} - Cần gấp',
-                                timeAndDistance: '5 phút trước - 1.2km', // dummy
+                                timeAndDistance: '$timeStr - 1.2km', // dummy distance
                                 buttonText: 'Tôi có thể giúp',
                                 sosData: sos,
                               );
