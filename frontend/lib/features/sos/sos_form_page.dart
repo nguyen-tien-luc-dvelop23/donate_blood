@@ -4,6 +4,7 @@ import 'dart:async';
 import '../../core/api/sos_service.dart';
 import 'sos_success_dialog.dart';
 import 'sos_guide_page.dart';
+import 'location_picker_screen.dart';
 
 class SOSFormPage extends StatefulWidget {
   const SOSFormPage({super.key});
@@ -321,7 +322,17 @@ class _SOSFormPageState extends State<SOSFormPage> {
               ),
             ),
           ),
-          Icon(Icons.gps_fixed, color: textTitleCol.withOpacity(0.3), size: 18),
+          GestureDetector(
+            onTap: () async {
+              final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const LocationPickerScreen()));
+              if (result != null && result['address'] != null) {
+                setState(() {
+                  _locationController.text = result['address'];
+                });
+              }
+            },
+            child: const Icon(Icons.gps_fixed, color: Color(0xFFFF6A00), size: 24),
+          ),
         ],
       ),
     );
