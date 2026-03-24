@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:dio/dio.dart';
 
 class BloodMapPage extends StatefulWidget {
   const BloodMapPage({super.key});
@@ -202,16 +203,29 @@ class _BloodMapPageState extends State<BloodMapPage> {
   }
 
   Widget _searchBar(BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(14)),
-      child: Row(children: [
-        Icon(Icons.search, color: Theme.of(context).textTheme.bodyMedium?.color), 
-        const SizedBox(width: 8),
-        Expanded(child: Text("Tìm bệnh viện, nhóm máu...", style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color))),
-        const Icon(Icons.tune, color: ctaOrange),
-      ]),
+    return GestureDetector(
+      onTap: () async {
+        final result = await showSearch(context: context, delegate: PlaceSearchDelegate());
+        if (result != null && result['lat'] != null && result['lon'] != null) {
+          final lat = result['lat'] as double;
+          final lon = result['lon'] as double;
+          setState(() {
+            _currentPosition = LatLng(lat, lon);
+          });
+          _mapController.move(_currentPosition, 16.0);
+        }
+      },
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(14)),
+        child: Row(children: [
+          Icon(Icons.search, color: Theme.of(context).textTheme.bodyMedium?.color), 
+          const SizedBox(width: 8),
+          Expanded(child: Text("Tìm bệnh viện, khu vực, tên đường...", style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color))),
+          const Icon(Icons.tune, color: ctaOrange),
+        ]),
+      ),
     );
   }
 
@@ -324,3 +338,76 @@ class _BloodMapPageState extends State<BloodMapPage> {
     );
   }
 }
+
+class PlaceSearchDelegate extends SearchDelegate<Map<String, dynamic>?> {
+  @override
+  String get searchFieldLabel => 'Nhập địa điểm...';
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      if (query.isNotEmpty)
+        IconButton(icon: const Icon(Icons.clear), onPressed: () => query = "")
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => close(context, null));
+  }
+
+  @override
+  Widget buildResults(BuildContext context) => _buildSuggestions();
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    if (query.isEmpty) return const Center(child: Text('Gợi ý: Nhập tên đường, phường, bệnh viện...'));
+    
+    return FutureBuilder<List<dynamic>>(
+      future: _searchPlaces(query),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFFF6A00)));
+        }
+        final results = snapshot.data ?? [];
+        if (results.isEmpty) return const Center(child: Text('Không tìm thấy địa điểm'));
+
+        return ListView.builder(
+          itemCount: results.length,
+          itemBuilder: (context, index) {
+            final place = results[index];
+            return ListTile(
+              leading: const Icon(Icons.location_on, color: Colors.blueGrey),
+              title: Text(place['display_name'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis),
+              onTap: () {
+                final lat = double.tryParse(place['lat']?.toString() ?? '0');
+                final lon = double.tryParse(place['lon']?.toString() ?? '0');
+                close(context, {
+                  'lat': lat,
+                  'lon': lon,
+                  'name': place['display_name']
+                });
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<List<dynamic>> _searchPlaces(String q) async {
+    try {
+      final dio = Dio();
+      final res = await dio.get(
+        'https://nominatim.openstreetmap.org/search', 
+        queryParameters: {'q': q, 'format': 'json', 'limit': 8, 'countrycodes': 'vn'},
+        options: Options(headers: {'User-Agent': 'BloodConnectFlutterApp/1.0'})
+      );
+      if (res.statusCode == 200 && res.data is List) {
+        return res.data;
+      }
+    } catch (_) {}
+    return [];
+  }
+}
+
